@@ -1,0 +1,17 @@
+{
+  "name": "AoC2021",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "gpu.js": "^2.11.3",
+    "heap-js": "^2.1.6"
+  }
+}
