@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
 let rawData = await fs.readFile('./input10.txt', 'utf8');
-// let rawData = await fs.readFile('./test10.txt', 'utf8');
+// let rawData = await fs.readFile('./test10_2.txt', 'utf8');
 
 let data = rawData.split('\n').filter(l => l !== '');
 
