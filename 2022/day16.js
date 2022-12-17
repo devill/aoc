@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 
-let data = (await fs.readFile('./input16.txt', 'utf8'))
-// let data = (await fs.readFile('./test16.txt', 'utf8'))
+// let data = (await fs.readFile('./input16.txt', 'utf8'))
+let data = (await fs.readFile('./test16.txt', 'utf8'))
     .split('\n')
     .map(l => /Valve (?<name>\w+) has flow rate=(?<rate>\d+); tunnel(s)? lead(s)? to valve(s)? (?<tunnels>.*)/.exec(l))
     .map(l => ({ name: l.groups.name, rate: parseInt(l.groups.rate), tunnels: l.groups.tunnels.split(', ') }))
@@ -37,7 +37,7 @@ while(!ready) {
     });
 }
 
-// console.log(data);
+console.log(JSON.stringify(data));
 
 let totalRemainingRate = Object.values(data).map(v => v.rate).reduce((s,v) => s + v, 0);
 let closedVales = Object.entries(data)
@@ -48,35 +48,8 @@ let closedVales = Object.entries(data)
 // console.log(totalRemainingRate);
 // console.log(closedVales);
 
-const singlePerson = (closedValves, currentValve, flowSoFar, totalRemainingTime, totalRemainingRate) => {
-    let maxFlow = flowSoFar;
-    for(let i = 0; i < closedValves.length; i++) {
-        if(maxFlow > flowSoFar + totalRemainingRate * totalRemainingTime) {
-            break;
-        }
-        const name = closedValves[i].name;
-        const timeLeftAfterReaching = totalRemainingTime - data[currentValve].distances[name] - 1;
-        let flow = flowSoFar + data[name].rate * timeLeftAfterReaching;
-        let subFlow = singlePerson(
-            [...closedValves.slice(0,i), ...closedValves.slice(i+1)],
-            name,
-            flow,
-            timeLeftAfterReaching,
-            totalRemainingRate - data[currentValve].rate
-        );
-        maxFlow = Math.max(maxFlow, subFlow);
-    }
-    return maxFlow;
-}
-
-console.log(singlePerson(closedVales, 'AA', 0, 30, totalRemainingRate));
-
-
 const multiPerson = (closedValves, currentValves, busyFor, flowSoFar, totalRemainingTime, totalRemainingRate) => {
     let freePerson = busyFor.findIndex(v => v === 0)
-    if(totalRemainingTime > 20) {
-        console.log(closedValves, currentValves, busyFor, flowSoFar, totalRemainingTime, totalRemainingRate);
-    }
     if(freePerson !== -1) {
         let maxFlow = flowSoFar;
         const cutoff = flowSoFar + totalRemainingRate * totalRemainingTime;
@@ -113,4 +86,5 @@ const multiPerson = (closedValves, currentValves, busyFor, flowSoFar, totalRemai
 
 }
 
-console.log(multiPerson(closedVales, ['AA','AA'], [0,0], 0, 26, totalRemainingRate));
+console.log(multiPerson(closedVales, ['AA'], [0], 0, 30, totalRemainingRate));
+//console.log(multiPerson(closedVales, ['AA','AA'], [0,0], 0, 26, totalRemainingRate));
