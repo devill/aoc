@@ -60,9 +60,11 @@ const calculateForBluePrint = (blueprint, i) => {
     console.log(maxConsumed);
 
     let maxGeode = 0;
+
     let maxTime = 32;
     for (let time = 0; time < maxTime; time++) {
         let nextOutcomes = {};
+        let largestMinimumPotential = 0;
 
         Object.values(outcomes).forEach(previous => {
 
@@ -72,6 +74,7 @@ const calculateForBluePrint = (blueprint, i) => {
             if(enoughResources(previous, blueprint[3])) {
                 let next = produce(previous, 3, blueprint[3]);
                 maxGeode = Math.max(next[7], maxGeode);
+                largestMinimumPotential = Math.max(largestMinimumPotential, next[7] + next[3] * (maxTime - time))
                 nextOutcomes[toKey(next)] = next;
             } else {
                 for(let i = 0; i < 3; i++) {
@@ -79,6 +82,7 @@ const calculateForBluePrint = (blueprint, i) => {
                     if(enoughResources(previous, blueprint[i]) && useful){
                         let next = produce(previous, i, blueprint[i]);
                         maxGeode = Math.max(next[7], maxGeode);
+                        largestMinimumPotential = Math.max(largestMinimumPotential, next[7] + next[3] * (maxTime - time))
                         nextOutcomes[toKey(next)] = next;
                     }
                 }
@@ -86,12 +90,17 @@ const calculateForBluePrint = (blueprint, i) => {
                 // No robot produced
                 let next = produce(previous);
                 maxGeode = Math.max(next[7], maxGeode);
+                largestMinimumPotential = Math.max(largestMinimumPotential, next[7] + next[3] * (maxTime - time));
                 nextOutcomes[toKey(next)] = next;
             }
 
         });
-
-        outcomes = nextOutcomes;
+        outcomes = Object.values(nextOutcomes).filter(o =>
+            o[7] + o[3] * (maxTime - time) + (maxTime - time) * (maxTime - time - 1) / 2 >= largestMinimumPotential
+        ).reduce((os, o) => {
+            os[toKey(o)] = o;
+            return os;
+        }, {});
 
         console.log("Blueprint:", (i+1), "Time:", time, "Fanout:", Object.keys(outcomes).length, "Max produced:", maxGeode);
     }
