@@ -1,0 +1,206 @@
+[Symetric horizontal reflection - horizontal_reflection() - expected: 2]
+#...
+..#.
+..#.
+#...
+
+[Asymetric horizontal reflection in first half - horizontal_reflection() - expected: 2]
+#....#
+..#...
+..#...
+#....#
+.#..#.
+#..#..
+
+[Asymetric horizontal reflection in second half - horizontal_reflection() - expected: 4]
+.#..#.
+#..#..
+#....#
+..#...
+..#...
+#....#
+
+[Asymetric horizontal reflection twice - horizontal_reflection() - expected: 6]
+..#...
+#....#
+#....#
+..#...
+..#...
+#....#
+
+[Official test case for horizontal - horizontal_reflection() - expected: 4]
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+
+[Symetric vertical reflection - vertical_reflection() - expected: 2]
+#..#
+.##.
+#..#
+....
+
+[Asymetric vertical reflection in first half - vertical_reflection() - expected: 2]
+#..#..
+.##..#
+#..##.
+....##
+.##...
+#..#.#
+
+[Asymetric vertical reflection in second half - vertical_reflection() - expected: 4]
+..#..#
+.#.##.
+#.#..#
+##....
+...##.
+.##..#
+
+[Official test case for vertical - vertical_reflection() - expected: 5]
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+[Asymetric vertical reflection twice - vertical_reflection() - expected: 6]
+.##..#
+#..##.
+#..##.
+.##..#
+#..##.
+.##..#
+
+[Combined test case for horizontal - reflection_score() - expected: 200]
+#....#
+..#...
+..#...
+#....#
+.#..#.
+#..#..
+
+[Combined test case for vertical - reflection_score() - expected: 4]
+..#..#
+.#.##.
+#.#..#
+##....
+...##.
+.##..#
+
+[Reflection in both directions - reflection_score() - expected: 503]
+........
+..##....
+.#..#...
+#....#..
+.......#
+.......#
+#....#..
+.#..#...
+
+[Multiple reflections in all directions - reflection_score() - expected: 1212]
+.##..##.
+#..##..#
+#..##..#
+.##..##.
+.##..##.
+#..##..#
+#..##..#
+.##..##.
+
+[Multiple patterns official test case - reflection_score() - expected: 405]
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+
+[Failure case - reflection_score() - expected: 1]
+..###.#..#.##
+#####.####.##
+...##.#..#.##
+...##.####.##
+###.#......#.
+###..######..
+###..........
+..##..##.#..#
+...###.##.###
+
+[Horizontal desmudge upper - desmudge() - expected: (1, 1)]
+..##.
+...##
+.#.##
+..##.
+
+[Horizontal desmudge lower - desmudge() - expected: (1, 2)]
+..##.
+.#.##
+...##
+..##.
+
+[Asymetric horizontal desmudge - desmudge() - expected: (1,3)]
+.....
+..##.
+.#.##
+...##
+..##.
+
+[Official horizontal desmudge case - desmudge() - expected: (0,5)]
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+[Official horizontal desmudge case 2 - desmudge() - expected: (4,1)]
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
+
+[Vertical desmudge case - desmudge() - expected: (5,0)]
+#.##..#
+..##...
+##..###
+#....#.
+.#..#.#
+.#..#.#
+#....#.
+##..###
+..##...
+
+[Multiple smudge official test case - reflection_score_smudges() - expected: 400]
+#.##..##.
+..#.##.#.
+##......#
+##......#
+..#.##.#.
+..##..##.
+#.#.##.#.
+
+#...##..#
+#....#..#
+..##..###
+#####.##.
+#####.##.
+..##..###
+#....#..#
