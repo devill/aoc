@@ -49,5 +49,4 @@ if __name__ == "__main__":
         column2_dict[num] = column2_dict.get(num, 0) + 1
 
     similarities = [column2_dict.get(i, 0) * i for i in column1]
-    print("Similarities:", similarities)
     print("Sum of similarities:", sum(similarities))
