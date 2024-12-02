@@ -37,18 +37,18 @@ def is_almost_safe(levels):
 def count_almost_safe_levels(levels):
     return reduce(lambda count, level: count + (1 if is_almost_safe(level) else 0), levels, 0)
 
-def parse_file(filename):
-    with open(filename, 'r') as file:
-        reports = []
-        for line in file:
-            # Parse the items in the line as integers
-            levels = list(map(int, line.split()))
-            reports.append(levels)
+def parse_file(file):
+
+    reports = []
+    for line in file:
+        # Parse the items in the line as integers
+        levels = list(map(int, line.split()))
+        reports.append(levels)
     return reports
 
 if __name__ == "__main__":
-    for filename in data_files_for(os.path.basename(__file__)):
-        parsed_data = parse_file(filename)
+    for file in data_files_for(os.path.basename(__file__)):
+        parsed_data = parse_file(file)
 
         print("\n--- Part one ---")
         print(count_safe_levels(parsed_data))

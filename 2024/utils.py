@@ -5,10 +5,12 @@ def data_files_for(current_file):
 
     if len(sys.argv) != 2:
         print("\n\n### Test Data ###")
-        yield f'test{default_id}.txt'
+        with open(f'test{default_id}.txt') as file:
+            yield file
 
         print("\n\n### Real Data ###")
-        yield f'input{default_id}.txt'
+        with open(f'input{default_id}.txt') as file:
+            yield file
 
     else:
         yield sys.argv[1]

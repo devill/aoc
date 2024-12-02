@@ -1,23 +1,22 @@
 import os
 from utils import data_files_for
 
-def parse_file(filename):
+def parse_file(file):
     column1 = []
     column2 = []
 
-    with open(filename, 'r') as file:
-        for line in file:
-            num1, num2 = map(int, line.split())
-            column1.append(num1)
-            column2.append(num2)
+    for line in file:
+        num1, num2 = map(int, line.split())
+        column1.append(num1)
+        column2.append(num2)
 
     return column1, column2
 
 if __name__ == "__main__":
-    for filename in data_files_for(os.path.basename(__file__)):
+    for file in data_files_for(os.path.basename(__file__)):
         print("\n--- Part one ---")
 
-        column1, column2 = parse_file(filename)
+        column1, column2 = parse_file(file)
 
         # Sort both columns in ascending order
         column1.sort()
