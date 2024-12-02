@@ -1,5 +1,6 @@
 
-import sys
+from utils import data_files_for
+import os
 from functools import reduce
 
 def first_unsafe_level(levels):
@@ -46,23 +47,10 @@ def parse_file(filename):
     return reports
 
 if __name__ == "__main__":
-    filename = None
+    for filename in data_files_for(os.path.basename(__file__)):
+        parsed_data = parse_file(filename)
 
-    if len(sys.argv) != 2:
-        choice = input("Choose input file - production (i) or test (t): ").strip().lower()
-        if choice == 'i':
-            filename = 'input02.txt'
-        elif choice == 't':
-            filename = 'test02.txt'
-        else:
-            print("Invalid choice. Exiting.")
-            sys.exit(1)
-    else:
-        filename = sys.argv[1]
-
-    parsed_data = parse_file(filename)
-
-    print("\n--- Part one ---")
-    print(count_safe_levels(parsed_data))
-    print("\n--- Part two ---")
-    print(count_almost_safe_levels(parsed_data))
+        print("\n--- Part one ---")
+        print(count_safe_levels(parsed_data))
+        print("\n--- Part two ---")
+        print(count_almost_safe_levels(parsed_data))
