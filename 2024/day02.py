@@ -25,14 +25,8 @@ def count_safe_levels(levels):
 def is_almost_safe(levels):
     if is_safe(levels):
         return True
-    unsafe = first_unsafe_level(levels)
 
-    remaining_levels = levels[:unsafe] + levels[unsafe + 1:]
-
-    if is_safe(remaining_levels):
-        return True
-
-    for i in range(0, len(levels) - 1):
+    for i in range(0, len(levels)):
         remaining_levels = levels[:i] + levels[i + 1:]
         if is_safe(remaining_levels):
             return True
