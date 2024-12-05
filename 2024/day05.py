@@ -35,6 +35,25 @@ def is_correctly_ordered(update, rules):
             banned_by[banned_page].append(page)
     return True
 
+def find_valid_order(update, rules):
+
+    path = []
+
+    def dfs(page):
+        if page in path:
+            return
+
+        for next_page in rules.cant_follow(page):
+            if next_page in update:
+                dfs(next_page)
+
+        path.append(page)
+
+    for page in update:
+        dfs(page)
+
+    return path
+
 if __name__ == "__main__":
 
     rulePattern = re.compile(r'(\d+)\|(\d+)')
@@ -61,3 +80,10 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
+        incorrect = [update for update in updates if not is_correctly_ordered(update, rules)]
+        fixed = [find_valid_order(update, rules) for update in incorrect]
+        midNumber = [f[(len(f) - 1) // 2] for f in fixed]
+
+
+        print(f"Incorrectly ordered updates: {len(incorrect)}")
+        print(f"Solution: {sum(midNumber)}")
