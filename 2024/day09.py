@@ -32,62 +32,49 @@ def calculate_checksum(defragmented_disk_map):
 def generate_disk_map(compressed_disk_map):
 
     disk_map = []
+    file_locations = []
+    file_lengths = []
     file_id = 0
     i = 0
     while i < len(compressed_disk_map):
 
+        file_locations.append(len(disk_map))
+        file_lengths.append(compressed_disk_map[i])
         disk_map.extend([file_id] * compressed_disk_map[i])
         if i + 1 < len(compressed_disk_map):
             disk_map.extend([None] * compressed_disk_map[i + 1])
         file_id += 1
         i += 2
-    return disk_map
+    return (disk_map, file_locations, file_lengths)
 
 def print_map(disk_map):
     print(''.join([ str(i) if i != None else "." for i in disk_map]))
 
 
-def file_defragment(input_disk_map):
+def file_defragment(input_disk_map, file_locations, file_lengths):
     disk_map = input_disk_map.copy()
-    n = len(disk_map)
-
-    def find_block_start(end):
-        file_id = disk_map[end]
-        start = end
-        while start >= 0 and disk_map[start] == file_id:
-            start -= 1
-        return start + 1
 
     def find_none_sequence(length):
         start = 0
-        while start < n:
+        while start < len(disk_map):
             if disk_map[start] is None:
                 end = start
-                while end < n and disk_map[end] is None:
+                while end < len(disk_map) and disk_map[end] is None:
                     end += 1
                 if end - start >= length:
                     return start, end
-                start = end - 1
             start += 1
         return None, None
 
-    i = n - 1
-    moved = set()
-    while i >= 0:
-        if disk_map[i] is not None and disk_map[i] not in moved:
-            moved.add(disk_map[i])
-            block_end = i + 1
-            block_start = find_block_start(i)
-            block_length = block_end - block_start
-
-            none_start, none_end = find_none_sequence(block_length)
-            if none_start is not None and none_end < block_start:
-                disk_map[none_start:none_start + block_length] = disk_map[block_start:block_end]
-                disk_map[block_start:block_end] = [None] * block_length
-
-            i = block_start - 1
-        else:
-            i -= 1
+    n = len(file_locations) - 1
+    while n > 0:
+        # print(n)
+        # print_map(disk_map)
+        start, end = find_none_sequence(file_lengths[n])
+        if start is not None and start < file_locations[n]:
+            disk_map[start:start + file_lengths[n]] = [n] * file_lengths[n]
+            disk_map[file_locations[n]:file_locations[n] + file_lengths[n]] = [None] * file_lengths[n]
+        n -= 1
 
     return disk_map
 
@@ -102,7 +89,7 @@ if __name__ == "__main__":
 
         print("\n--- Part one ---")
 
-        disk_map = generate_disk_map(data)
+        disk_map, _, _ = generate_disk_map(data)
 
         defragmented_disk_map = defragment(disk_map)
 
@@ -111,15 +98,12 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        disk_map = generate_disk_map(data)
-        
-        file_defragmented_disk_map = file_defragment(disk_map)
-        
+        disk_map, file_locations, file_lengths  = generate_disk_map(data)
+        # print(file_locations, file_lengths)
+
+        file_defragmented_disk_map = file_defragment(disk_map, file_locations, file_lengths)
+
         checksum = calculate_checksum(file_defragmented_disk_map)
         print(f"Checksum: {checksum}")
-
-        # 6359213660505 too low
-        # 6381625147860 too high
-        # 6381625147860
 
         # exit(0)
