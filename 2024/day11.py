@@ -1,25 +1,28 @@
 import os
 from utils import data_files_for
 
-def transform_stones(stones):
-    new_stones = []
-    for stone in stones:
-        if stone == 0:
-            new_stones.append(1)
-        elif len(str(stone)) % 2 == 0:
-            half_len = len(str(stone)) // 2
-            left_half = int(str(stone)[:half_len])
-            right_half = int(str(stone)[half_len:])
-            new_stones.extend([left_half, right_half])
-        else:
-            new_stones.append(stone * 2024)
-    return new_stones
+memo = {}
 
-def transform_stones_25(stones):
-    for i in range(25):
-        stones = transform_stones(stones)
-    return stones
-
+def result_length(n, remaining_blinks): 
+    if remaining_blinks == 0:
+        return 1
+    elif (n, remaining_blinks) in memo:
+        return memo[(n, remaining_blinks)]
+    elif n == 0:
+        r = result_length(1, remaining_blinks - 1)
+        memo[(n, remaining_blinks)] = r
+        return r
+    elif len(str(n)) % 2 == 0:
+        half_len = len(str(n)) // 2
+        left_half = int(str(n)[:half_len])
+        right_half = int(str(n)[half_len:])
+        r = result_length(left_half, remaining_blinks - 1) +result_length(right_half, remaining_blinks-1)
+        memo[(n, remaining_blinks)] = r
+        return r
+    else:
+        r = result_length(n * 2024, remaining_blinks - 1)
+        memo[(n, remaining_blinks)] = r
+        return r
 
 if __name__ == "__main__":
     for file in data_files_for(os.path.basename(__file__)):
@@ -27,23 +30,10 @@ if __name__ == "__main__":
 
         print("\n--- Part one ---")
 
-        stones = transform_stones_25(stones)
-
-        print(len(stones))
+        print(sum([result_length(n,25) for n in data]))
 
         print("\n--- Part two ---")
 
+        print(sum([result_length(n,75) for n in data]))
 
-        memo = {}
-        for j in range(2):
-            next_stones = []
-            for stone in stones:
-                if stone in memo:
-                    next_stones.extend(memo[stone])
-                else:
-                    result = transform_stones_25([stone])
-                    memo[stone] = result
-                    next_stones.extend(result)
-            stones = next_stones
-            print(j, len(stones))
-        print(len(stones))
+        
