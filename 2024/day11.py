@@ -30,10 +30,10 @@ if __name__ == "__main__":
 
         print("\n--- Part one ---")
 
-        print(sum([result_length(n,25) for n in data]))
+        print(sum([result_length(n,25) for n in stones]))
 
         print("\n--- Part two ---")
 
-        print(sum([result_length(n,75) for n in data]))
+        print(sum([result_length(n,75) for n in stones]))
 
         
