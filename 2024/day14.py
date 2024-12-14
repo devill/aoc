@@ -59,9 +59,9 @@ if __name__ == "__main__":
         print("\n--- Part two ---")
 
         if type == 'real':
-            for seconds in range(100000):
+            for seconds in range(10000):
                 score = calculate_score(robots, seconds, size)
-                if score < 180000000:
+                if score < 100000000:
                     print(display_positions(future_positions(robots, seconds, size), size))
                     print(f"Second {seconds}: {score}", flush=True)
                     time.sleep(0.3)
