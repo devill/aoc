@@ -25,7 +25,7 @@ def result_length(n, remaining_blinks):
         return r
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         stones = list(map(int, file.readline().strip().split()))
 
         print("\n--- Part one ---")

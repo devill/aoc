@@ -59,7 +59,7 @@ if __name__ == "__main__":
     rulePattern = re.compile(r'(\d+)\|(\d+)')
     listPattern = re.compile(r'(\d+,)+\d+')
 
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         rules = Rules()
         updates = []
 

@@ -42,7 +42,7 @@ def search_peaks(location, graph, peaks):
     return reachable_peaks
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         data = [[int(i) for i in list(line.strip())] for line in file]
 
         reachable_peaks = find_reachable_peaks_with_multiplicity(data)

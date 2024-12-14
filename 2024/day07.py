@@ -35,7 +35,7 @@ def hasSolution(result, operands, use_concentration):
 
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
 
         data = [parse_line(line) for line in file]
 

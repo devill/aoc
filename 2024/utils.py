@@ -6,11 +6,11 @@ def data_files_for(current_file):
     if len(sys.argv) != 2:
         print("\n\n### Test Data ###")
         with open(f'test{default_id}.txt') as file:
-            yield file
+            yield file, 'test'
 
         print("\n\n### Real Data ###")
         with open(f'input{default_id}.txt') as file:
-            yield file
+            yield file, 'real'
 
     else:
         yield sys.argv[1]

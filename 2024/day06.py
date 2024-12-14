@@ -47,7 +47,7 @@ def simulate_guard_with_obstruction(map_data, start_pos, start_dir, obstruction_
     return loop_detected
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         map_data = [list(line.strip()) for line in file]
 
         print("\n--- Part one ---")

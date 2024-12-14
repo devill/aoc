@@ -13,7 +13,7 @@ def parse_file(file):
     return column1, column2
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         print("\n--- Part one ---")
 
         column1, column2 = parse_file(file)

@@ -47,7 +47,7 @@ def parse_file(file):
     return reports
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         parsed_data = parse_file(file)
 
         print("\n--- Part one ---")

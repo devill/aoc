@@ -80,7 +80,7 @@ def file_defragment(input_disk_map, file_locations, file_lengths):
 
 
 if __name__ == "__main__":
-    for file in data_files_for(os.path.basename(__file__)):
+    for file, _ in data_files_for(os.path.basename(__file__)):
         data = []
         for line in file:
             data = [ int(i) for i in list(line.strip())]
