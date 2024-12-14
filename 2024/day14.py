@@ -1,6 +1,7 @@
 import os
 import re
 import math
+import time
 from utils import data_files_for
 
 def parse_line(line):
@@ -15,8 +16,30 @@ def display_positions(positions, size):
     robot_map = [[0 for _ in range(size[0])] for _ in range(size[1])]
     for x,y in positions:
         robot_map[y][x] += 1
-    print('\n'.join([''.join([str(c) if c > 0 else '.' for c in line]) for line in robot_map]))
+    return '\n'.join([''.join([str(c) if c > 0 else '.' for c in line]) for line in robot_map])
 
+
+def future_positions(robots, seconds, size):
+    return [
+        ((r["position"][0] + seconds * r["velocity"][0]) % size[0],
+         (r["position"][1] + seconds * r["velocity"][1]) % size[1])
+        for r in robots
+    ]
+
+
+def calculate_score(robots, seconds, size):
+    end_positions = future_positions(robots, seconds, size)
+
+    quadrants = [[0,0], [0,0]]
+    half_point = ((size[0] - 1) // 2, (size[1] - 1) // 2)
+
+    for p in end_positions:
+        if p[0] != half_point[0] and p[1] != half_point[1]:
+            qx = 0 if p[0] < half_point[0] else 1
+            qy = 0 if p[1] < half_point[1] else 1
+            quadrants[qx][qy] += 1
+
+    return math.prod(c for line in quadrants for c in line)
 
 if __name__ == "__main__":
     for file, type in data_files_for(os.path.basename(__file__)):
@@ -29,26 +52,18 @@ if __name__ == "__main__":
 
         initial_positions = [ r["position"] for r in robots ]
 
+        score = calculate_score(robots, 100, size)
 
-        end_positions = [
-            ((r["position"][0] + 100 * r["velocity"][0]) % size[0],
-             (r["position"][1] + 100 * r["velocity"][1]) % size[1])
-            for r in robots
-        ]
-
-        # display_positions(end_positions, size)
-
-        quadrants = [[0,0], [0,0]]
-        half_point = ((size[0] - 1) // 2, (size[1] - 1) // 2)
-
-        for p in end_positions:
-            if p[0] != half_point[0] and p[1] != half_point[1]:
-                qx = 0 if p[0] < half_point[0] else 1
-                qy = 0 if p[1] < half_point[1] else 1
-                quadrants[qx][qy] += 1
-
-        print(math.prod(c for line in quadrants for c in line))
+        print(score)
 
         print("\n--- Part two ---")
+
+        if type == 'real':
+            for seconds in range(100000):
+                score = calculate_score(robots, seconds, size)
+                if score < 180000000:
+                    print(display_positions(future_positions(robots, seconds, size), size))
+                    print(f"Second {seconds}: {score}", flush=True)
+                    time.sleep(0.3)
 
         # exit(0)
