@@ -15,12 +15,10 @@ class WareHouseParser:
     def parse(self):
         raw_ware_house_map, raw_moves = self.raw_data.split("\n\n")
         ware_house_map = [list(row.strip()) for row in raw_ware_house_map.split("\n")]
-        big_ware_house_map = self.enlarge_warehouse(ware_house_map)
-        moves = [self.get_direction(d) for d in ''.join(raw_moves.split()).strip()]
-        return moves, ware_house_map, big_ware_house_map
+        moves = [self.__get_direction(d) for d in ''.join(raw_moves.split()).strip()]
+        return moves, ware_house_map
 
-    @staticmethod
-    def get_direction(direction):
+    def __get_direction(self, direction):
         if direction == "<":
             return (-1, 0)
         elif direction == ">":
@@ -30,96 +28,134 @@ class WareHouseParser:
         elif direction == "v":
             return (0, 1)
 
-    @staticmethod
-    def enlarge_warehouse(ware_house_map):
-        conversion = {
-            ROBOT: [ROBOT, EMPTY],
-            BOX: [BIG_BOX_LEFT, BIG_BOX_RIGHT],
-            WALL: [WALL, WALL],
-            EMPTY: [EMPTY, EMPTY]
-        }
+def enlarge_warehouse(ware_house_map):
+    conversion = {
+        ROBOT: [ROBOT, EMPTY],
+        BOX: [BIG_BOX_LEFT, BIG_BOX_RIGHT],
+        WALL: [WALL, WALL],
+        EMPTY: [EMPTY, EMPTY]
+    }
 
-        enlarged_map = []
-        for row in ware_house_map:
-            new_row = []
-            for cell in row:
-                new_row.extend(conversion[cell])
-            enlarged_map.append(new_row)
-        return enlarged_map
+    enlarged_map = []
+    for row in ware_house_map:
+        new_row = []
+        for cell in row:
+            new_row.extend(conversion[cell])
+        enlarged_map.append(new_row)
+    return enlarged_map
+
+class WareHousePosition:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def add(self, direction):
+        return WareHousePosition(self.x + direction[0], self.y + direction[1])
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+
+    def __repr__(self):
+        return f"({self.x}, {self.y})"
+
+class WareHouse:
+    def __init__(self, ware_house_map):
+        self.ware_house_map = [line.copy() for line in ware_house_map]
+        self.robot_position = self.find_robot()
+
+    def find_robot(self):
+        for y, row in enumerate(self.ware_house_map):
+            for x, cell in enumerate(row):
+                if cell == ROBOT:
+                    return WareHousePosition(x, y)
+        raise ValueError("No robot found")
+
+    def get_big_box_positions(self, position):
+        if self.get_at(position) == BIG_BOX_LEFT:
+            return [position, position.add((1, 0))]
+        if self.get_at(position) == BIG_BOX_RIGHT:
+            return [position.add((-1, 0)), position]
+        raise ValueError("Not a big box")
+
+    def can_move_box(self, position, direction):
+        if self.get_at(position) == EMPTY:
+            return True
+        if self.get_at(position) == WALL:
+            return False
+        if self.get_at(position) == BOX:
+            return self.can_move_box(position.add(direction), direction)
+        if self.get_at(position) in [BIG_BOX_LEFT, BIG_BOX_RIGHT]:
+            if self.is_vertical(direction):
+                big_box_positions = self.get_big_box_positions(position)
+                for p in big_box_positions:
+                    if not self.can_move_box(p.add(direction), direction):
+                        return False
+                return True
+            else:
+                return self.can_move_box(position.add(direction).add(direction), direction)
+        raise ValueError("Unknown cell type "+ self.get_at(position))
+
+    def can_move_robot(self, direction):
+        if self.get_at(self.robot_position.add(direction)) == WALL:
+            return False
+        if self.get_at(self.robot_position.add(direction)) in [BOX, BIG_BOX_LEFT, BIG_BOX_RIGHT]:
+            return self.can_move_box(self.robot_position.add(direction), direction)
+        return True
+
+    def move_robot(self, direction):
+        if self.can_move_robot(direction):
+            self.move_box(self.robot_position.add(direction), direction)
+            self.set_at(self.robot_position, EMPTY)
+            self.robot_position = self.robot_position.add(direction)
+            self.set_at(self.robot_position, ROBOT)
+
+    def move_box(self, position, direction):
+        if self.get_at(position) == WALL:
+            raise ValueError("Cannot move box into wall")
+        if self.get_at(position) == BOX:
+            self.move_box(position.add(direction), direction)
+            self.set_at(position.add(direction), BOX)
+            self.set_at(position, EMPTY)
+        if self.get_at(position) in [BIG_BOX_LEFT, BIG_BOX_RIGHT]:
+            big_box_positions = self.get_big_box_positions(position)
+            if self.is_vertical(direction):
+                for p in big_box_positions:
+                    self.move_box(p.add(direction), direction)
+                for p in big_box_positions:
+                    self.set_at(p.add(direction), self.get_at(p))
+                    self.set_at(p, EMPTY)
+            else:
+                self.move_box(position.add(direction).add(direction), direction)
+                self.set_at(position.add(direction).add(direction), self.get_at(position.add(direction)))
+                self.set_at(position.add(direction), self.get_at(position))
+                self.set_at(position, EMPTY)
 
 
+    def get_at(self, position):
+        return self.ware_house_map[position.y][position.x]
 
-def find_robot(ware_house_map):
-    for y, row in enumerate(ware_house_map):
-        for x, cell in enumerate(row):
-            if cell == ROBOT:
-                return (x, y)
+    def set_at(self, position, value):
+        self.ware_house_map[position.y][position.x] = value
 
+    def apply_moves(self, moves):
+        for direction in moves:
+            self.move_robot(direction)
 
-def moved(position, direction):
-    x, y = position
-    dx, dy = direction
-    return (x + dx, y + dy)
-
-
-def can_move_big_boxes(big_warehouse_map, position, direction):
-    next_to_move = moved(position, direction)
-    if big_warehouse_map[next_to_move[1]][next_to_move[0]] == WALL:
-        return False
-    if direction[0] == 0:
-        if big_warehouse_map[next_to_move[1]][next_to_move[0]] == BIG_BOX_LEFT:
-            return (
-                    can_move_big_boxes(big_warehouse_map, next_to_move, direction) and
-                    can_move_big_boxes(big_warehouse_map, moved(next_to_move, (1, 0)), direction)
-            )
-        if big_warehouse_map[next_to_move[1]][next_to_move[0]] == BIG_BOX_RIGHT:
-            return (
-                    can_move_big_boxes(big_warehouse_map, next_to_move, direction) and
-                    can_move_big_boxes(big_warehouse_map, moved(next_to_move, (-1, 0)), direction)
-            )
-    else:
-        if big_warehouse_map[next_to_move[1]][next_to_move[0]] in [BIG_BOX_LEFT, BIG_BOX_RIGHT]:
-            return can_move_big_boxes(big_warehouse_map, next_to_move, direction)
-    return True
+    def is_vertical(self, direction):
+        return direction[0] == 0
 
 
-def move_big_boxes(big_warehouse_map, position, direction):
-    next_to_move = moved(position, direction)
-    if big_warehouse_map[next_to_move[1]][next_to_move[0]] == EMPTY:
-        return big_warehouse_map
+    def box_gps(self):
+        return [y * 100 + x for y, row in enumerate(self.ware_house_map) for x, cell in enumerate(row) if cell in [BOX,BIG_BOX_LEFT]]
 
-    if direction[0] == 0:
-        if big_warehouse_map[next_to_move[1]][next_to_move[0]] == BIG_BOX_LEFT:
-            next_to_move_other_side = moved(next_to_move, (1, 0))
-        else:
-            next_to_move_other_side = moved(next_to_move, (-1, 0))
+    def __repr__(self):
+        return "\n".join("".join(row) for row in self.ware_house_map)
 
-        big_warehouse_map = move_big_boxes(big_warehouse_map, next_to_move, direction)
-        big_warehouse_map = move_big_boxes(big_warehouse_map, next_to_move_other_side, direction)
-
-        target = moved(next_to_move, direction)
-        other_target = moved(next_to_move_other_side, direction)
-        big_warehouse_map[target[1]][target[0]] = big_warehouse_map[next_to_move[1]][next_to_move[0]]
-        big_warehouse_map[other_target[1]][other_target[0]] = big_warehouse_map[next_to_move_other_side[1]][
-            next_to_move_other_side[0]]
-
-        big_warehouse_map[next_to_move[1]][next_to_move[0]] = EMPTY
-        big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]] = EMPTY
-    else:
-        next_to_move_other_side = moved(next_to_move, direction)
-        target = moved(next_to_move_other_side, direction)
-
-        big_warehouse_map = move_big_boxes(big_warehouse_map, next_to_move_other_side, direction)
-
-        big_warehouse_map[target[1]][target[0]] = big_warehouse_map[next_to_move_other_side[1]][
-            next_to_move_other_side[0]]
-        big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]] = big_warehouse_map[next_to_move[1]][
-            next_to_move[0]]
-        big_warehouse_map[next_to_move[1]][next_to_move[0]] = EMPTY
-
-    # draw_map(big_warehouse_map)
-
-    return big_warehouse_map
+    def draw(self):
+        print(self, end="\n\n")
 
 
 def get_expected_result(meta, part):
@@ -127,13 +163,6 @@ def get_expected_result(meta, part):
         return expected_results["real"][f"part {part}"]
     else:
         return expected_results["tests"][int(meta["sequence_id"])][f"part {part}"]
-
-
-def draw_map(big_warehouse_map):
-    for line in big_warehouse_map:
-        print(''.join(line))
-    print('')
-
 
 if __name__ == "__main__":
     all_as_expected = True
@@ -151,48 +180,26 @@ if __name__ == "__main__":
 
         raw_data = file.read()
         parser = WareHouseParser(raw_data)
-        moves, ware_house_map, big_ware_house_map = parser.parse()
+        moves, ware_house_map = parser.parse()
 
         print("\n--- Part one ---")
 
-        robot_position = find_robot(ware_house_map)
+        ware_house = WareHouse(ware_house_map)
+        ware_house.apply_moves(moves)
+        result = sum(ware_house.box_gps())
 
-        for direction in moves:
-            target = moved(robot_position, direction)
-            first_after_boxes = moved(robot_position, direction)
-
-            while ware_house_map[first_after_boxes[1]][first_after_boxes[0]] == BOX:
-                first_after_boxes = moved(first_after_boxes, direction)
-
-            if ware_house_map[first_after_boxes[1]][first_after_boxes[0]] == WALL:
-                continue
-
-            ware_house_map[first_after_boxes[1]][first_after_boxes[0]] = BOX
-            ware_house_map[robot_position[1]][robot_position[0]] = EMPTY
-            ware_house_map[target[1]][target[0]] = ROBOT
-            robot_position = target
-
-        box_gps = [y * 100 + x for y, row in enumerate(ware_house_map) for x, cell in enumerate(row) if cell == BOX]
-        result = sum(box_gps)
         expected_result = get_expected_result(meta, 1)
         all_as_expected = all_as_expected and result == expected_result
         print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
 
         print("\n--- Part two ---")
 
-        robot_position = find_robot(big_ware_house_map)
+        big_ware_house_map = enlarge_warehouse(ware_house_map)
 
-        for direction in moves:
-            if can_move_big_boxes(big_ware_house_map, robot_position, direction):
-                # draw_map(big_warehouse_map)
-                big_ware_house_map = move_big_boxes(big_ware_house_map, robot_position, direction)
-                big_ware_house_map[robot_position[1]][robot_position[0]] = EMPTY
-                robot_position = moved(robot_position, direction)
-                big_ware_house_map[robot_position[1]][robot_position[0]] = ROBOT
+        big_ware_house = WareHouse(big_ware_house_map)
+        big_ware_house.apply_moves(moves)
+        result = sum(big_ware_house.box_gps())
 
-        box_gps = [y * 100 + x for y, row in enumerate(big_ware_house_map) for x, cell in enumerate(row) if
-                   cell == BIG_BOX_LEFT]
-        result = sum(box_gps)
         expected_result = get_expected_result(meta, 2)
         all_as_expected = all_as_expected and result == expected_result
         print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
