@@ -9,15 +9,15 @@ WALL = "#"
 EMPTY = "."
 
 
-class WareHouseParser:
+class WarehouseParser:
     def __init__(self, raw_data):
         self.raw_data = raw_data
 
     def parse(self):
-        raw_ware_house_map, raw_moves = self.raw_data.split("\n\n")
-        ware_house_map = [list(row.strip()) for row in raw_ware_house_map.split("\n")]
+        raw_warehouse_map, raw_moves = self.raw_data.split("\n\n")
+        warehouse_map = [list(row.strip()) for row in raw_warehouse_map.split("\n")]
         moves = [self.__get_direction(d) for d in ''.join(raw_moves.split()).strip()]
-        return moves, ware_house_map
+        return moves, warehouse_map
 
     def __get_direction(self, direction):
         if direction == "<":
@@ -30,7 +30,7 @@ class WareHouseParser:
             return (0, 1)
 
 
-def enlarge_warehouse(ware_house_map):
+def enlarge_warehouse(warehouse_map):
     conversion = {
         ROBOT: [ROBOT, EMPTY],
         BOX: [BIG_BOX_LEFT, BIG_BOX_RIGHT],
@@ -39,7 +39,7 @@ def enlarge_warehouse(ware_house_map):
     }
 
     enlarged_map = []
-    for row in ware_house_map:
+    for row in warehouse_map:
         new_row = []
         for cell in row:
             new_row.extend(conversion[cell])
@@ -47,13 +47,13 @@ def enlarge_warehouse(ware_house_map):
     return enlarged_map
 
 
-class WareHousePosition:
+class WarehousePosition:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
     def add(self, direction):
-        return WareHousePosition(self.x + direction[0], self.y + direction[1])
+        return WarehousePosition(self.x + direction[0], self.y + direction[1])
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
@@ -65,16 +65,16 @@ class WareHousePosition:
         return f"({self.x}, {self.y})"
 
 
-class WareHouse:
-    def __init__(self, ware_house_map):
-        self.ware_house_map = [line.copy() for line in ware_house_map]
+class Warehouse:
+    def __init__(self, warehouse_map):
+        self.warehouse_map = [line.copy() for line in warehouse_map]
         self.robot_position = self.find_robot()
 
     def find_robot(self):
-        for y, row in enumerate(self.ware_house_map):
+        for y, row in enumerate(self.warehouse_map):
             for x, cell in enumerate(row):
                 if cell == ROBOT:
-                    return WareHousePosition(x, y)
+                    return WarehousePosition(x, y)
         raise ValueError("No robot found")
 
     def get_box_positions(self, position):
@@ -146,10 +146,10 @@ class WareHouse:
                 self.set_at(position, EMPTY)
 
     def get_at(self, position):
-        return self.ware_house_map[position.y][position.x]
+        return self.warehouse_map[position.y][position.x]
 
     def set_at(self, position, value):
-        self.ware_house_map[position.y][position.x] = value
+        self.warehouse_map[position.y][position.x] = value
 
     def apply_moves(self, moves):
         for direction in moves:
@@ -159,11 +159,11 @@ class WareHouse:
         return direction[0] == 0
 
     def box_gps(self):
-        return [y * 100 + x for y, row in enumerate(self.ware_house_map) for x, cell in enumerate(row) if
+        return [y * 100 + x for y, row in enumerate(self.warehouse_map) for x, cell in enumerate(row) if
                 cell in [BOX, BIG_BOX_LEFT]]
 
     def __repr__(self):
-        return "\n".join("".join(row) for row in self.ware_house_map)
+        return "\n".join("".join(row) for row in self.warehouse_map)
 
     def draw(self):
         print(self, end="\n\n")
@@ -190,14 +190,14 @@ if __name__ == "__main__":
 
     for file, meta in data_files_for(os.path.basename(__file__)):
         raw_data = file.read()
-        parser = WareHouseParser(raw_data)
-        moves, ware_house_map = parser.parse()
+        parser = WarehouseParser(raw_data)
+        moves, warehouse_map = parser.parse()
 
         print("\n--- Part one ---")
 
-        ware_house = WareHouse(ware_house_map)
-        ware_house.apply_moves(moves)
-        result = sum(ware_house.box_gps())
+        warehouse = Warehouse(warehouse_map)
+        warehouse.apply_moves(moves)
+        result = sum(warehouse.box_gps())
 
         expected_result = get_expected_result(meta, 1)
         all_as_expected = all_as_expected and result == expected_result
@@ -205,11 +205,11 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        big_ware_house_map = enlarge_warehouse(ware_house_map)
+        big_warehouse_map = enlarge_warehouse(warehouse_map)
 
-        big_ware_house = WareHouse(big_ware_house_map)
-        big_ware_house.apply_moves(moves)
-        result = sum(big_ware_house.box_gps())
+        big_warehouse = Warehouse(big_warehouse_map)
+        big_warehouse.apply_moves(moves)
+        result = sum(big_warehouse.box_gps())
 
         expected_result = get_expected_result(meta, 2)
         all_as_expected = all_as_expected and result == expected_result
