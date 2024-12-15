@@ -8,6 +8,8 @@ BIG_BOX_RIGHT = "]"
 WALL = "#"
 EMPTY = "."
 
+
+
 def get_direction(direction):
     if direction == "<":
         return (-1, 0)
@@ -18,11 +20,13 @@ def get_direction(direction):
     elif direction == "v":
         return (0, 1)
 
+
 def find_robot(ware_house_map):
     for y, row in enumerate(ware_house_map):
         for x, cell in enumerate(row):
             if cell == ROBOT:
                 return (x, y)
+
 
 def moved(position, direction):
     x, y = position
@@ -85,7 +89,8 @@ def move_big_boxes(big_warehouse_map, position, direction):
         target = moved(next_to_move, direction)
         other_target = moved(next_to_move_other_side, direction)
         big_warehouse_map[target[1]][target[0]] = big_warehouse_map[next_to_move[1]][next_to_move[0]]
-        big_warehouse_map[other_target[1]][other_target[0]] = big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]]
+        big_warehouse_map[other_target[1]][other_target[0]] = big_warehouse_map[next_to_move_other_side[1]][
+            next_to_move_other_side[0]]
 
         big_warehouse_map[next_to_move[1]][next_to_move[0]] = EMPTY
         big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]] = EMPTY
@@ -95,13 +100,22 @@ def move_big_boxes(big_warehouse_map, position, direction):
 
         big_warehouse_map = move_big_boxes(big_warehouse_map, next_to_move_other_side, direction)
 
-        big_warehouse_map[target[1]][target[0]] = big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]]
-        big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]] = big_warehouse_map[next_to_move[1]][next_to_move[0]]
+        big_warehouse_map[target[1]][target[0]] = big_warehouse_map[next_to_move_other_side[1]][
+            next_to_move_other_side[0]]
+        big_warehouse_map[next_to_move_other_side[1]][next_to_move_other_side[0]] = big_warehouse_map[next_to_move[1]][
+            next_to_move[0]]
         big_warehouse_map[next_to_move[1]][next_to_move[0]] = EMPTY
 
     # draw_map(big_warehouse_map)
 
     return big_warehouse_map
+
+
+def get_expected_result(meta, part):
+    if meta["type"] == "real":
+        return expected_results["real"][f"part {part}"]
+    else:
+        return expected_results["tests"][int(meta["sequence_id"])][f"part {part}"]
 
 
 def draw_map(big_warehouse_map):
@@ -111,6 +125,17 @@ def draw_map(big_warehouse_map):
 
 
 if __name__ == "__main__":
+    all_as_expected = True
+    expected_results = {
+        "tests":
+            [
+                {'part 1': 2028, 'part 2': 1751},
+                {'part 1': 10092, 'part 2': 9021},
+                {'part 1': 908, 'part 2': 618},
+            ],
+        "real": {'part 1': 1568399, 'part 2': 1575877}
+    }
+
     for file, meta in data_files_for(os.path.basename(__file__)):
 
         raw_data = file.read()
@@ -141,8 +166,11 @@ if __name__ == "__main__":
             ware_house_map[target[1]][target[0]] = ROBOT
             robot_position = target
 
-        box_gps = [y*100+x for y, row in enumerate(ware_house_map) for x, cell in enumerate(row) if cell == BOX]
-        print(sum(box_gps))
+        box_gps = [y * 100 + x for y, row in enumerate(ware_house_map) for x, cell in enumerate(row) if cell == BOX]
+        result = sum(box_gps)
+        expected_result = get_expected_result(meta, 1)
+        all_as_expected = all_as_expected and result == expected_result
+        print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
 
         print("\n--- Part two ---")
 
@@ -150,12 +178,20 @@ if __name__ == "__main__":
 
         for direction in moves:
             if can_move_big_boxes(big_warehouse_map, robot_position, direction):
-
                 # draw_map(big_warehouse_map)
                 big_warehouse_map = move_big_boxes(big_warehouse_map, robot_position, direction)
                 big_warehouse_map[robot_position[1]][robot_position[0]] = EMPTY
                 robot_position = moved(robot_position, direction)
                 big_warehouse_map[robot_position[1]][robot_position[0]] = ROBOT
 
-        box_gps = [y*100+x for y, row in enumerate(big_warehouse_map) for x, cell in enumerate(row) if cell == BIG_BOX_LEFT]
-        print(sum(box_gps))
+        box_gps = [y * 100 + x for y, row in enumerate(big_warehouse_map) for x, cell in enumerate(row) if
+                   cell == BIG_BOX_LEFT]
+        result = sum(box_gps)
+        expected_result = get_expected_result(meta, 2)
+        all_as_expected = all_as_expected and result == expected_result
+        print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
+
+    if all_as_expected:
+        print("\nAll results as expected")
+    else:
+        print("\nSome results are not as expected")
