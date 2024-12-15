@@ -8,6 +8,7 @@ BIG_BOX_RIGHT = "]"
 WALL = "#"
 EMPTY = "."
 
+
 class WareHouseParser:
     def __init__(self, raw_data):
         self.raw_data = raw_data
@@ -28,6 +29,7 @@ class WareHouseParser:
         elif direction == "v":
             return (0, 1)
 
+
 def enlarge_warehouse(ware_house_map):
     conversion = {
         ROBOT: [ROBOT, EMPTY],
@@ -43,6 +45,7 @@ def enlarge_warehouse(ware_house_map):
             new_row.extend(conversion[cell])
         enlarged_map.append(new_row)
     return enlarged_map
+
 
 class WareHousePosition:
     def __init__(self, x, y):
@@ -61,6 +64,7 @@ class WareHousePosition:
     def __repr__(self):
         return f"({self.x}, {self.y})"
 
+
 class WareHouse:
     def __init__(self, ware_house_map):
         self.ware_house_map = [line.copy() for line in ware_house_map]
@@ -73,35 +77,41 @@ class WareHouse:
                     return WareHousePosition(x, y)
         raise ValueError("No robot found")
 
-    def get_big_box_positions(self, position):
+    def get_box_positions(self, position):
+        if self.get_at(position) == BOX:
+            return [position]
         if self.get_at(position) == BIG_BOX_LEFT:
             return [position, position.add((1, 0))]
         if self.get_at(position) == BIG_BOX_RIGHT:
             return [position.add((-1, 0)), position]
-        raise ValueError("Not a big box")
+        raise ValueError("Not a box")
+
+    def get_box_targets(self, position, direction):
+        if self.get_at(position) == BOX:
+            return [position.add(direction)]
+        if self.is_vertical(direction):
+            return [p.add(direction) for p in self.get_box_positions(position)]
+        else:
+            return [position.add(direction).add(direction)]
+
+    def is_box_at(self, position):
+        return self.get_at(position) in [BOX, BIG_BOX_LEFT, BIG_BOX_RIGHT]
 
     def can_move_box(self, position, direction):
         if self.get_at(position) == EMPTY:
             return True
         if self.get_at(position) == WALL:
             return False
-        if self.get_at(position) == BOX:
-            return self.can_move_box(position.add(direction), direction)
-        if self.get_at(position) in [BIG_BOX_LEFT, BIG_BOX_RIGHT]:
-            if self.is_vertical(direction):
-                big_box_positions = self.get_big_box_positions(position)
-                for p in big_box_positions:
-                    if not self.can_move_box(p.add(direction), direction):
-                        return False
-                return True
-            else:
-                return self.can_move_box(position.add(direction).add(direction), direction)
-        raise ValueError("Unknown cell type "+ self.get_at(position))
+        if self.is_box_at(position):
+            return all(
+                self.can_move_box(p, direction) for p in self.get_box_targets(position, direction)
+            )
+        raise ValueError("Unknown cell type " + self.get_at(position))
 
     def can_move_robot(self, direction):
         if self.get_at(self.robot_position.add(direction)) == WALL:
             return False
-        if self.get_at(self.robot_position.add(direction)) in [BOX, BIG_BOX_LEFT, BIG_BOX_RIGHT]:
+        if self.is_box_at(self.robot_position.add(direction)):
             return self.can_move_box(self.robot_position.add(direction), direction)
         return True
 
@@ -115,24 +125,25 @@ class WareHouse:
     def move_box(self, position, direction):
         if self.get_at(position) == WALL:
             raise ValueError("Cannot move box into wall")
+        if self.is_box_at(position):
+            for p in self.get_box_targets(position, direction):
+                self.move_box(p, direction)
+            self.move_one_box(position, direction)
+
+    def move_one_box(self, position, direction):
         if self.get_at(position) == BOX:
-            self.move_box(position.add(direction), direction)
             self.set_at(position.add(direction), BOX)
             self.set_at(position, EMPTY)
-        if self.get_at(position) in [BIG_BOX_LEFT, BIG_BOX_RIGHT]:
-            big_box_positions = self.get_big_box_positions(position)
+        else:
+            big_box_positions = self.get_box_positions(position)
             if self.is_vertical(direction):
-                for p in big_box_positions:
-                    self.move_box(p.add(direction), direction)
                 for p in big_box_positions:
                     self.set_at(p.add(direction), self.get_at(p))
                     self.set_at(p, EMPTY)
             else:
-                self.move_box(position.add(direction).add(direction), direction)
                 self.set_at(position.add(direction).add(direction), self.get_at(position.add(direction)))
                 self.set_at(position.add(direction), self.get_at(position))
                 self.set_at(position, EMPTY)
-
 
     def get_at(self, position):
         return self.ware_house_map[position.y][position.x]
@@ -147,9 +158,9 @@ class WareHouse:
     def is_vertical(self, direction):
         return direction[0] == 0
 
-
     def box_gps(self):
-        return [y * 100 + x for y, row in enumerate(self.ware_house_map) for x, cell in enumerate(row) if cell in [BOX,BIG_BOX_LEFT]]
+        return [y * 100 + x for y, row in enumerate(self.ware_house_map) for x, cell in enumerate(row) if
+                cell in [BOX, BIG_BOX_LEFT]]
 
     def __repr__(self):
         return "\n".join("".join(row) for row in self.ware_house_map)
@@ -164,6 +175,7 @@ def get_expected_result(meta, part):
     else:
         return expected_results["tests"][int(meta["sequence_id"])][f"part {part}"]
 
+
 if __name__ == "__main__":
     all_as_expected = True
     expected_results = {
@@ -177,7 +189,6 @@ if __name__ == "__main__":
     }
 
     for file, meta in data_files_for(os.path.basename(__file__)):
-
         raw_data = file.read()
         parser = WareHouseParser(raw_data)
         moves, ware_house_map = parser.parse()
