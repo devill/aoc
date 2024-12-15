@@ -169,53 +169,58 @@ class Warehouse:
         print(self, end="\n\n")
 
 
-def get_expected_result(meta, part):
-    if meta["type"] == "real":
-        return expected_results["real"][f"part {part}"]
-    else:
-        return expected_results["tests"][int(meta["sequence_id"])][f"part {part}"]
+def calculate_result(warehouse_map, moves):
+    warehouse = Warehouse(warehouse_map)
+    warehouse.apply_moves(moves)
+    return sum(warehouse.box_gps())
 
+class ResultTracker:
+    def __init__(self, expected_results):
+        self.expected_results = expected_results
+
+        self.all_as_expected = True
+
+    def register_result(self, result, meta, part):
+        expected_result = self.get_expected_result(meta, part)
+        self.all_as_expected = self.all_as_expected and result == expected_result
+        print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
+
+    def get_expected_result(self, meta, part):
+        if meta["type"] == "test":
+            return self.expected_results["tests"][int(meta["sequence_id"])][f"part {part}"]
+        return self.expected_results["real"][f"part {part}"]
+
+    def check_results(self):
+        print()
+        if self.all_as_expected:
+            print("All results are as expected")
+        else:
+            print("Some results are wrong")
 
 if __name__ == "__main__":
-    all_as_expected = True
-    expected_results = {
-        "tests":
-            [
-                {'part 1': 2028, 'part 2': 1751},
-                {'part 1': 10092, 'part 2': 9021},
-                {'part 1': 908, 'part 2': 618},
-            ],
-        "real": {'part 1': 1568399, 'part 2': 1575877}
-    }
+    result_tracker = ResultTracker({
+                                       "tests":
+                                           [
+                                               {'part 1': 2028, 'part 2': 1751},
+                                               {'part 1': 10092, 'part 2': 9021},
+                                               {'part 1': 908, 'part 2': 618},
+                                           ],
+                                       "real": {'part 1': 1568399, 'part 2': 1575877}
+                                   })
 
     for file, meta in data_files_for(os.path.basename(__file__)):
         raw_data = file.read()
-        parser = WarehouseParser(raw_data)
-        moves, warehouse_map = parser.parse()
+        moves, warehouse_map = WarehouseParser(raw_data).parse()
 
         print("\n--- Part one ---")
 
-        warehouse = Warehouse(warehouse_map)
-        warehouse.apply_moves(moves)
-        result = sum(warehouse.box_gps())
-
-        expected_result = get_expected_result(meta, 1)
-        all_as_expected = all_as_expected and result == expected_result
-        print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
+        part_1_result = calculate_result(warehouse_map, moves)
+        result_tracker.register_result(part_1_result, meta, 1)
 
         print("\n--- Part two ---")
 
         big_warehouse_map = enlarge_warehouse(warehouse_map)
+        part_2_result = calculate_result(big_warehouse_map, moves)
+        result_tracker.register_result(part_2_result, meta, 2)
 
-        big_warehouse = Warehouse(big_warehouse_map)
-        big_warehouse.apply_moves(moves)
-        result = sum(big_warehouse.box_gps())
-
-        expected_result = get_expected_result(meta, 2)
-        all_as_expected = all_as_expected and result == expected_result
-        print(f"Result: {result} ({'OK' if result == expected_result else 'ERROR, should be ' + str(expected_result)})")
-
-    if all_as_expected:
-        print("\nAll results as expected")
-    else:
-        print("\nSome results are not as expected")
+    result_tracker.check_results()
