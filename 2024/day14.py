@@ -42,7 +42,7 @@ def calculate_score(robots, seconds, size):
     return math.prod(c for line in quadrants for c in line)
 
 if __name__ == "__main__":
-    for file, type in data_files_for(os.path.basename(__file__)):
+    for file, meta in data_files_for(os.path.basename(__file__)):
         robots = [ parse_line(line) for line in file ]
 
         size = (11,7) if type == "test" else (101,103)
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        if type == 'real':
+        if meta["type"] == 'real':
             for seconds in range(10000):
                 score = calculate_score(robots, seconds, size)
                 if score < 100000000:
