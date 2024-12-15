@@ -8,17 +8,45 @@ BIG_BOX_RIGHT = "]"
 WALL = "#"
 EMPTY = "."
 
+class WareHouseParser:
+    def __init__(self, raw_data):
+        self.raw_data = raw_data
 
+    def parse(self):
+        raw_ware_house_map, raw_moves = self.raw_data.split("\n\n")
+        ware_house_map = [list(row.strip()) for row in raw_ware_house_map.split("\n")]
+        big_ware_house_map = self.enlarge_warehouse(ware_house_map)
+        moves = [self.get_direction(d) for d in ''.join(raw_moves.split()).strip()]
+        return moves, ware_house_map, big_ware_house_map
 
-def get_direction(direction):
-    if direction == "<":
-        return (-1, 0)
-    elif direction == ">":
-        return (1, 0)
-    elif direction == "^":
-        return (0, -1)
-    elif direction == "v":
-        return (0, 1)
+    @staticmethod
+    def get_direction(direction):
+        if direction == "<":
+            return (-1, 0)
+        elif direction == ">":
+            return (1, 0)
+        elif direction == "^":
+            return (0, -1)
+        elif direction == "v":
+            return (0, 1)
+
+    @staticmethod
+    def enlarge_warehouse(ware_house_map):
+        conversion = {
+            ROBOT: [ROBOT, EMPTY],
+            BOX: [BIG_BOX_LEFT, BIG_BOX_RIGHT],
+            WALL: [WALL, WALL],
+            EMPTY: [EMPTY, EMPTY]
+        }
+
+        enlarged_map = []
+        for row in ware_house_map:
+            new_row = []
+            for cell in row:
+                new_row.extend(conversion[cell])
+            enlarged_map.append(new_row)
+        return enlarged_map
+
 
 
 def find_robot(ware_house_map):
@@ -32,23 +60,6 @@ def moved(position, direction):
     x, y = position
     dx, dy = direction
     return (x + dx, y + dy)
-
-
-def enlarge_warehouse(ware_house_map):
-    conversion = {
-        ROBOT: [ROBOT, EMPTY],
-        BOX: [BIG_BOX_LEFT, BIG_BOX_RIGHT],
-        WALL: [WALL, WALL],
-        EMPTY: [EMPTY, EMPTY]
-    }
-
-    enlarged_map = []
-    for row in ware_house_map:
-        new_row = []
-        for cell in row:
-            new_row.extend(conversion[cell])
-        enlarged_map.append(new_row)
-    return enlarged_map
 
 
 def can_move_big_boxes(big_warehouse_map, position, direction):
@@ -139,13 +150,8 @@ if __name__ == "__main__":
     for file, meta in data_files_for(os.path.basename(__file__)):
 
         raw_data = file.read()
-
-        # print(raw_data)
-
-        raw_ware_house_map, raw_moves = raw_data.split("\n\n")
-        ware_house_map = [list(row.strip()) for row in raw_ware_house_map.split("\n")]
-        big_warehouse_map = enlarge_warehouse(ware_house_map)
-        moves = [get_direction(d) for d in ''.join(raw_moves.split()).strip()]
+        parser = WareHouseParser(raw_data)
+        moves, ware_house_map, big_ware_house_map = parser.parse()
 
         print("\n--- Part one ---")
 
@@ -174,17 +180,17 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        robot_position = find_robot(big_warehouse_map)
+        robot_position = find_robot(big_ware_house_map)
 
         for direction in moves:
-            if can_move_big_boxes(big_warehouse_map, robot_position, direction):
+            if can_move_big_boxes(big_ware_house_map, robot_position, direction):
                 # draw_map(big_warehouse_map)
-                big_warehouse_map = move_big_boxes(big_warehouse_map, robot_position, direction)
-                big_warehouse_map[robot_position[1]][robot_position[0]] = EMPTY
+                big_ware_house_map = move_big_boxes(big_ware_house_map, robot_position, direction)
+                big_ware_house_map[robot_position[1]][robot_position[0]] = EMPTY
                 robot_position = moved(robot_position, direction)
-                big_warehouse_map[robot_position[1]][robot_position[0]] = ROBOT
+                big_ware_house_map[robot_position[1]][robot_position[0]] = ROBOT
 
-        box_gps = [y * 100 + x for y, row in enumerate(big_warehouse_map) for x, cell in enumerate(row) if
+        box_gps = [y * 100 + x for y, row in enumerate(big_ware_house_map) for x, cell in enumerate(row) if
                    cell == BIG_BOX_LEFT]
         result = sum(box_gps)
         expected_result = get_expected_result(meta, 2)
