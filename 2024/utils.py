@@ -17,7 +17,7 @@ def data_files_for(current_file):
             if test_files:
                 for test_file in test_files:
                     sequence_id = test_file.split('_')[-1].split('.')[0]
-                    print(f"\n\n### Test Data {sequence_id}###")
+                    print(f"\n\n### Test Data {sequence_id} ###")
                     with open(test_file) as file:
                         yield file, {"type": 'test', "sequence_id": sequence_id}
 
