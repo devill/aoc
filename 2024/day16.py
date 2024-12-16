@@ -56,21 +56,17 @@ def maze_dijsktra(maze):
         weight, state = heapq.heappop(queue)
 
         if state in visited:
-            if visited[state] < weight:
-                continue
+            continue
         visited[state] = weight
-
-        if state not in graph:
-            graph[state] = []
 
         for next_state, next_weight in maze.get_next_states_with_weights(state):
             if next_state not in graph:
                 graph[next_state] = []
-            total_weight = weight + next_weight
+
             if next_state not in visited:
-                heapq.heappush(queue, (total_weight, next_state))
-            if next_state not in visited or visited[next_state] == total_weight:
-                graph[next_state].append(state)
+                heapq.heappush(queue, ((weight + next_weight), next_state))
+
+            graph[next_state].append(state)
 
     return visited, graph
 
@@ -87,7 +83,9 @@ def find_states_on_shortest_paths(visited, graph, end_position):
         visited_states.add(state)
         states_on_shortest_paths.add(state)
         for prev_state in graph.get(state, []):
-            stack.append(prev_state)
+            expected_weight = 1 if state[1] == prev_state[1] else 1000
+            if visited[prev_state] + expected_weight == visited[state]:
+                stack.append(prev_state)
 
     return states_on_shortest_paths
 
@@ -187,4 +185,4 @@ if __name__ == "__main__":
 
 
 
-        #draw_map(data, positions_on_shortest_paths)
+        draw_map(data, positions_on_shortest_paths)
