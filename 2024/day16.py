@@ -14,7 +14,7 @@ class Maze:
         for y, row in enumerate(self.data):
             for x, cell in enumerate(row):
                 if cell == "S":
-                    return ((x, y), (-1, 0))
+                    return ((x, y), (1, 0))
 
     def find_end_position(self):
         for y, row in enumerate(self.data):
@@ -79,7 +79,7 @@ def maze_dijsktra(maze):
     return visited
 
 
-def find_states_on_shortest_paths_2(visited, end_position):
+def find_states_on_shortest_paths(visited, end_position):
     stack = end_states_with_lowest_weight(end_position, visited)
     states_on_shortest_paths = set()
 
@@ -91,7 +91,6 @@ def find_states_on_shortest_paths_2(visited, end_position):
         visited_states.add(state)
         states_on_shortest_paths.add(state)
         for prev_state, expected_weight in maze.get_previous_states_with_weights(state):
-            print (prev_state, expected_weight, visited[prev_state], visited[state])
             if visited[prev_state] + expected_weight == visited[state]:
                 stack.append(prev_state)
 
@@ -182,13 +181,8 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        states_on_shortest_paths = find_states_on_shortest_paths_2(visited, end_position)
+        states_on_shortest_paths = find_states_on_shortest_paths(visited, end_position)
         positions_on_shortest_paths = set([ state[0] for state in states_on_shortest_paths])
         print(f"Number of positions on any of the shortest paths: {len(positions_on_shortest_paths)} ({len(states_on_shortest_paths)} states)")
-        # 572 too low
-
-        # 586 too high
-
-
 
         draw_map(data, positions_on_shortest_paths)
