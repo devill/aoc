@@ -110,13 +110,61 @@ def draw_map(data, positions_on_shortest_paths):
             elif cell == '.':
                 print('\033[90m.\033[0m', end="")  # Darker color for '.'
             elif cell == '#':
-                print('\033[97m#\033[0m', end="")  # White color for '#'
+                print('\033[90m#\033[0m', end="")  # White color for '#'
             else:
                 print(cell, end="")
         print()
 
+def draw_map_with_graph(data, graph, positions_on_shortest_paths):
+    for y, row in enumerate(data):
+        for x, cell in enumerate(row):
+            if (x, y) in positions_on_shortest_paths:
+                print('\033[91mO\033[0m', end="")
+            elif cell == '.':
+                print('\033[90m.\033[0m', end="")  # Darker color for '.'
+            elif cell == '#':
+                print('\033[90m#\033[0m', end="")  # White color for '#'
+            else:
+                print(cell, end="")
+            if (x, y) in graph and (x + 1, y) in graph[(x, y)] and (x + 1, y) in graph and (x, y) in graph[(x + 1, y)]:
+                print('\033[93mX\033[0m', end="")
+            elif (x, y) in graph and (x + 1, y) in graph[(x, y)]:
+                print('\033[93m<\033[0m', end="")
+            elif (x + 1, y) in graph and (x, y) in graph[(x + 1, y)]:
+                print('\033[93m>\033[0m', end="")
+            elif cell == '#' or data[y][x + 1] == '#':
+                print('\033[90m#\033[0m', end="")  # White color for '#'
+            else:
+                print(' ', end="")
+        print()
+        for x, cell in enumerate(row):
+            if (x, y) in graph and (x, y + 1) in graph[(x, y)] and (x, y + 1) in graph and (x, y) in graph[(x, y + 1)]:
+                print('\033[93mX\033[0m', end="")
+            elif (x, y) in graph and (x, y + 1) in graph[(x, y)]:
+                print('\033[93m^\033[0m', end="")
+            elif (x, y + 1) in graph and (x, y) in graph[(x, y + 1)]:
+                print('\033[93mv\033[0m', end="")
+            elif cell == '#' or data[y + 1][x] == '#':
+                print('\033[90m#\033[0m', end="")
+            else:
+                print('  ', end="")
+            print('\033[90m#\033[0m', end="")
+        print()
+
+
+def flatten_graph(graph):
+    flat_graph = {}
+    for state, prev_states in graph.items():
+        if state[0] not in flat_graph:
+            flat_graph[state[0]] = []
+        flat_graph[state[0]].extend([prev_state[0] for prev_state in prev_states if prev_state in graph])
+    return flat_graph
+
+
 if __name__ == "__main__":
-    for file, _ in data_files_for(os.path.basename(__file__)):
+    for file, meta in data_files_for(os.path.basename(__file__)):
+        # if meta['type'] == 'real':
+        #     continue
         data = [list(line.strip()) for line in file.readlines()]
 
         print("\n--- Part one ---")
@@ -135,4 +183,5 @@ if __name__ == "__main__":
         # 572 too low
         # 586 too high
 
+        flat_graph = flatten_graph(graph)
         draw_map(data, positions_on_shortest_paths)
