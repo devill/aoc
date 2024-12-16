@@ -30,6 +30,14 @@ class Maze:
         (x, y), (dx, dy) = state
         return 0 <= x + dx < self.width and 0 <= y + dy < self.height and self.data[y + dy][x + dx] != "#"
 
+    def get_move_backward_state(self, state):
+        (x, y), (dx, dy) = state
+        return ((x - dx, y - dy), (dx, dy))
+
+    def can_move_backward(self, state):
+        (x, y), (dx, dy) = state
+        return 0 <= x - dx < self.width and 0 <= y - dy < self.height and self.data[y - dy][x - dx] != "#"
+
     def get_turn_states(self, state):
         (x, y), (dx, dy) = state
         return [
@@ -38,11 +46,16 @@ class Maze:
         ]
 
     def get_next_states_with_weights(self, state):
-        states = [(state, 1000) for state in self.get_turn_states(state)]
+        states = [(s, 1000) for s in self.get_turn_states(state)]
         if self.can_move_forward(state):
             states.append((self.get_move_forward_state(state), 1))
         return states
 
+    def get_previous_states_with_weights(self, state):
+        states = [(s, 1000) for s in self.get_turn_states(state)]
+        if self.can_move_backward(state):
+            states.append((self.get_move_backward_state(state), 1))
+        return states
 
 def maze_dijsktra(maze):
     start_state = maze.find_start_state()
@@ -50,7 +63,6 @@ def maze_dijsktra(maze):
     visited = {}
     queue = [(0, start_state)]
     heapq.heapify(queue)
-    graph = {}
 
     while queue:
         weight, state = heapq.heappop(queue)
@@ -60,18 +72,14 @@ def maze_dijsktra(maze):
         visited[state] = weight
 
         for next_state, next_weight in maze.get_next_states_with_weights(state):
-            if next_state not in graph:
-                graph[next_state] = []
-
             if next_state not in visited:
                 heapq.heappush(queue, ((weight + next_weight), next_state))
 
-            graph[next_state].append(state)
 
-    return visited, graph
+    return visited
 
 
-def find_states_on_shortest_paths(visited, graph, end_position):
+def find_states_on_shortest_paths_2(visited, end_position):
     stack = end_states_with_lowest_weight(end_position, visited)
     states_on_shortest_paths = set()
 
@@ -82,13 +90,12 @@ def find_states_on_shortest_paths(visited, graph, end_position):
             continue
         visited_states.add(state)
         states_on_shortest_paths.add(state)
-        for prev_state in graph.get(state, []):
-            expected_weight = 1 if state[1] == prev_state[1] else 1000
+        for prev_state, expected_weight in maze.get_previous_states_with_weights(state):
+            print (prev_state, expected_weight, visited[prev_state], visited[state])
             if visited[prev_state] + expected_weight == visited[state]:
                 stack.append(prev_state)
 
     return states_on_shortest_paths
-
 
 def shortest_path_weight(end_position, visited):
     return min(visited[(end_position, direction)] for direction in DIRECTIONS if
@@ -97,8 +104,7 @@ def shortest_path_weight(end_position, visited):
 
 def end_states_with_lowest_weight(end_position, visited):
     spw = shortest_path_weight(end_position, visited)
-    return [(end_position, direction) for direction in DIRECTIONS if
-               (end_position, direction) in visited and visited[(end_position, direction)] == spw]
+    return [(end_position, direction) for direction in DIRECTIONS if visited[(end_position, direction)] == spw]
 
 def draw_map(data, positions_on_shortest_paths):
     for y, row in enumerate(data):
@@ -168,7 +174,7 @@ if __name__ == "__main__":
         print("\n--- Part one ---")
 
         maze = Maze(data)
-        visited, graph = maze_dijsktra(maze)
+        visited = maze_dijsktra(maze)
         end_position = maze.find_end_position()
 
         weight = shortest_path_weight(end_position, visited)
@@ -176,10 +182,10 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        states_on_shortest_paths = find_states_on_shortest_paths(visited, graph, end_position)
+        states_on_shortest_paths = find_states_on_shortest_paths_2(visited, end_position)
         positions_on_shortest_paths = set([ state[0] for state in states_on_shortest_paths])
         print(f"Number of positions on any of the shortest paths: {len(positions_on_shortest_paths)} ({len(states_on_shortest_paths)} states)")
-        # 573 too low
+        # 572 too low
 
         # 586 too high
 
