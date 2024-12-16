@@ -44,7 +44,7 @@ class Maze:
         return states
 
 
-def maze_dijsktra_with_paths(maze):
+def maze_dijsktra(maze):
     start_state = maze.find_start_state()
 
     visited = {}
@@ -64,11 +64,12 @@ def maze_dijsktra_with_paths(maze):
             graph[state] = []
 
         for next_state, next_weight in maze.get_next_states_with_weights(state):
+            if next_state not in graph:
+                graph[next_state] = []
             total_weight = weight + next_weight
-            if next_state not in visited or visited[next_state] >= total_weight:
+            if next_state not in visited:
                 heapq.heappush(queue, (total_weight, next_state))
-                if next_state not in graph:
-                    graph[next_state] = []
+            if next_state not in visited or visited[next_state] == total_weight:
                 graph[next_state].append(state)
 
     return visited, graph
@@ -121,7 +122,7 @@ if __name__ == "__main__":
         print("\n--- Part one ---")
 
         maze = Maze(data)
-        visited, graph = maze_dijsktra_with_paths(maze)
+        visited, graph = maze_dijsktra(maze)
         end_position = maze.find_end_position()
 
         weight = shortest_path_weight(end_position, visited)
