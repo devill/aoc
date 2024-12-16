@@ -75,9 +75,9 @@ def maze_dijsktra(maze):
     return visited, graph
 
 
-def find_positions_on_shortest_paths(visited, graph, end_position):
+def find_states_on_shortest_paths(visited, graph, end_position):
     stack = end_states_with_lowest_weight(end_position, visited)
-    positions_on_shortest_paths = set()
+    states_on_shortest_paths = set()
 
     visited_states = set()
     while stack:
@@ -85,11 +85,11 @@ def find_positions_on_shortest_paths(visited, graph, end_position):
         if state in visited_states:
             continue
         visited_states.add(state)
-        positions_on_shortest_paths.add(state[0])
+        states_on_shortest_paths.add(state)
         for prev_state in graph.get(state, []):
             stack.append(prev_state)
 
-    return positions_on_shortest_paths
+    return states_on_shortest_paths
 
 
 def shortest_path_weight(end_position, visited):
@@ -178,10 +178,13 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        positions_on_shortest_paths = find_positions_on_shortest_paths(visited, graph, end_position)
-        print(f"Number of positions on any of the shortest paths: {len(positions_on_shortest_paths)}")
-        # 572 too low
+        states_on_shortest_paths = find_states_on_shortest_paths(visited, graph, end_position)
+        positions_on_shortest_paths = set([ state[0] for state in states_on_shortest_paths])
+        print(f"Number of positions on any of the shortest paths: {len(positions_on_shortest_paths)} ({len(states_on_shortest_paths)} states)")
+        # 573 too low
+
         # 586 too high
 
-        flat_graph = flatten_graph(graph)
-        draw_map(data, positions_on_shortest_paths)
+
+
+        #draw_map(data, positions_on_shortest_paths)
