@@ -98,12 +98,4 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        for i in range(10000000):
-            registers = [i, 0, 0]
-            computer = ChronospatialComputer(registers)
-            output = computer.run_program(program)
-            if output == ','.join([str(j) for j in program]):
-                print(i, output)
-                break
-            elif i % 10000 == 0:
-                print(i)
+
