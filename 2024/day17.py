@@ -59,6 +59,8 @@ class ChronospatialComputer:
         while self.instruction_pointer < len(program):
             opcode = program[self.instruction_pointer]
             operand = program[self.instruction_pointer + 1]
+            opname = ["ADV", "BXL", "BST", "JNZ", "BXC", "OUT", "BDV", "CDV"]
+            #print(f"{self.instruction_pointer}: {opname[opcode]} {operand} ({self.registers})")
             if opcode == 0:
                 self.adv(operand)
             elif opcode == 1:
@@ -82,6 +84,20 @@ class ChronospatialComputer:
         return ','.join(map(str, self.output))
 
 
+def find_initial_value_for(program, expected_output, v):
+    if len(expected_output) == 0:
+        return v
+    o = expected_output[-1]
+
+    for i in range(8):
+        computer = ChronospatialComputer([8*v + i, 0, 0])
+        output = int(computer.run_program(program))
+        if output == o:
+            val = find_initial_value_for(program, expected_output[:-1], 8 * v + i)
+            if val is not None:
+                return val
+    return None
+
 if __name__ == "__main__":
     for file, _ in data_files_for(os.path.basename(__file__)):
         raw_data = file.read()
@@ -99,3 +115,14 @@ if __name__ == "__main__":
         print("\n--- Part two ---")
 
 
+        program_without_jnz = program[:len(program)-2]
+
+        init = find_initial_value_for(program_without_jnz, program, 0)
+
+        print(f"Initial value: {init}")
+        computer = ChronospatialComputer([init, 0, 0])
+        output = computer.run_program(program)
+        print(output)
+
+        # 37186267430023 too low
+        #2, 4, 1, 2, 7, 5, 4, 1, 1, 3, 5, 5, 0, 3, 3, 0
