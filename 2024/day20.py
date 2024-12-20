@@ -80,15 +80,7 @@ def find_shortest_paths(racetrack, start):
 
     return cost_so_far
 
-def positions_within_distance(position, distance):
-    x, y = position
-    for dx in range(-distance, distance + 1):
-        remaining_distance = distance - abs(dx)
-        for dy in range(-remaining_distance, remaining_distance + 1):
-            if dx != 0 or dy != 0:
-                yield x + dx, y + dy
-
-def find_cheats(racetrack, start, max_length):
+def find_cheat_candidates_from(racetrack, start, max_length):
     frontier = [(1, wall_neighbor) for wall_neighbor in racetrack.wall_neighbors(start)]
     visited = set()
 
@@ -109,51 +101,66 @@ def find_cheats(racetrack, start, max_length):
         else:
             yield current_position, current_length
 
+def find_cheat_candidates(racetrack, max_length):
+    for start_position in racetrack.valid_positions():
+        for end_position, cheat_distance in find_cheat_candidates_from(racetrack, start_position, max_length):
+            yield start_position, end_position, cheat_distance
+
+def find_cheats(racetrack, max_length):
+    start = racetrack.find_start()
+    end = racetrack.find_end()
+
+    shortest_paths_from_start = find_shortest_paths(racetrack, start)
+    shortest_paths_from_end = find_shortest_paths(racetrack, end)
+
+    shortest_path_length = shortest_paths_from_start[end]
+
+    for cheat_start_position, cheat_end_position, cheat_distance in find_cheat_candidates(racetrack, max_length):
+        cheat_length = shortest_paths_from_start[cheat_start_position] + shortest_paths_from_end[cheat_end_position] + cheat_distance
+        saved_time = shortest_path_length - cheat_length
+        if saved_time > 1:
+            yield saved_time
+
+
 if __name__ == "__main__":
     for file, meta in data_files_for(os.path.basename(__file__)):
         limit = 100 if meta['type'] == 'real' else 50
         data = [list(line.strip()) for line in file]
 
         racetrack = Racetrack(data)
-        start = racetrack.find_start()
-        end = racetrack.find_end()
-
-        shortest_paths_from_start = find_shortest_paths(racetrack, start)
-        shortest_paths_from_end = find_shortest_paths(racetrack, end)
-
-        shortest_path_length = shortest_paths_from_start[end]
-
-        print(f"Shortest path length: {shortest_path_length}")
 
         print("\n--- Part one ---")
 
         cheat_count = 0
         saved_time_frequency = {}
-        for position1 in racetrack.valid_positions():
-            for position2, distance in find_cheats(racetrack, position1, 2):
-                cheat_length = shortest_paths_from_start[position1] + shortest_paths_from_end[position2] + distance
-                if cheat_length < shortest_path_length:
-                    saved_time = shortest_path_length - cheat_length
-                    saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
-                    if saved_time >= limit:
-                        cheat_count += 1
+        for saved_time in find_cheats(racetrack, 2):
+            if saved_time >= limit:
+                cheat_count += 1
+                saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
 
         print(f"Cheats worth at least {limit} picoseconds: {cheat_count}")
+        print("Saved time frequency:")
+        for saved_time, frequency in sorted(saved_time_frequency.items()):
+            print(f"{frequency} cheats saved {saved_time} picoseconds ")
 
         print("\n--- Part two ---")
 
         cheat_count = 0
-        for position1 in racetrack.valid_positions():
-            for position2, distance in find_cheats(racetrack, position1, 20):
-                cheat_length = shortest_paths_from_start[position1] + shortest_paths_from_end[position2] + distance
-                if cheat_length < shortest_path_length:
-                    saved_time = shortest_path_length - cheat_length
-                    if saved_time >= limit:
-                        cheat_count += 1
-
+        saved_time_frequency = {}
+        for saved_time in find_cheats(racetrack, 20):
+            if saved_time >= limit:
+                cheat_count += 1
+                saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
 
         print(f"Cheats worth at least {limit} picoseconds: {cheat_count}")
-        # test value should be 285
+        print("Saved time frequency:")
+        for saved_time, frequency in sorted(saved_time_frequency.items()):
+            print(f"{frequency} cheats saved {saved_time} picoseconds ")
+
+
+
+
+    # test value should be 285
         # too low 233268
         # too high 1061108
 
