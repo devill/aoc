@@ -63,6 +63,14 @@ class Racetrack:
             for x, cell in enumerate(row):
                 yield x, y
 
+
+def generate_cheat_path(cheat_start, cheat_end):
+    for x in range(cheat_start[0], cheat_end[0] + 1, 1 if cheat_start[0] < cheat_end[0] else -1):
+        yield x, cheat_start[1]
+    for y in range(cheat_start[1], cheat_end[1] + 1, 1 if cheat_start[1] < cheat_end[1] else -1):
+        yield cheat_end[0], y
+
+
 class CheatFinder:
     def __init__(self, racetrack):
         self.racetrack = racetrack
@@ -90,35 +98,6 @@ class CheatFinder:
 
         return cost_so_far, came_from
 
-    def find_cheat_candidates_from(self, start, max_length):
-
-        visited = set()
-        visited.add(start)
-
-        frontier = [(1, wall_neighbor) for wall_neighbor in self.racetrack.wall_neighbors(start)]
-        come_from = {start: None}
-        for wall_neighbor in self.racetrack.wall_neighbors(start):
-            come_from[wall_neighbor] = start
-
-        while frontier:
-            current_length, current_position = frontier.pop(0)
-
-            if current_position in visited:
-                continue
-
-            visited.add(current_position)
-
-            if current_length > max_length:
-                continue
-
-            if self.racetrack.data[current_position[1]][current_position[0]] == WALL:
-                for neighbor, _ in self.racetrack.all_neighbors(current_position):
-                    if neighbor not in visited:
-                        frontier.append((current_length + 1, neighbor))
-                        come_from[neighbor] = current_position
-            else:
-                yield self.reconstruct_path(come_from, current_position)
-
     def reconstruct_path(self, come_from, end):
         path = [end]
         while come_from[end] is not None:
@@ -127,32 +106,39 @@ class CheatFinder:
         path.reverse()
         return path
 
-    def find_cheat_candidates(self, max_length):
-        for start_position in self.racetrack.valid_positions():
-            for path in self.find_cheat_candidates_from(start_position, max_length):
-                yield path
-
     def find_cheats(self, max_length):
-        for cheat_path in self.find_cheat_candidates(max_length):
-            cheat_start_position, cheat_end_position, cheat_distance = cheat_path[0], cheat_path[-1], len(cheat_path) - 1
-            cheat_length = self.distance_to_start[cheat_start_position] + self.distance_to_end[cheat_end_position] + cheat_distance
-            saved_time = self.shortest_path_length - cheat_length
-            if saved_time > 1:
-                path_start = self.reconstruct_path(self.trace_to_start, cheat_start_position)
-                final_approach = self.reconstruct_path(self.trace_to_end, cheat_end_position)
-                final_approach.reverse()
-                yield saved_time, path_start, cheat_path, final_approach
+        for cheat_start in self.racetrack.valid_positions():
+            for cheat_end in self.positions_in_range(cheat_start, max_length):
+                if not self.racetrack.is_valid_position(cheat_end):
+                    continue
+                if self.distance_between(cheat_start, cheat_end) < 2:
+                    continue
+                saved_time = self.shortest_path_length - (self.distance_to_start[cheat_start] + self.distance_to_end[cheat_end] + self.distance_between(cheat_start, cheat_end))
+                if saved_time > 0:
+                    #path_start = self.reconstruct_path(self.trace_to_start, cheat_start)
+                    #cheat_path = [position for position in generate_cheat_path(cheat_start, cheat_end)]
+                    #final_approach = self.reconstruct_path(self.trace_to_end, cheat_end)
+                    yield saved_time, [], [], [] #, path_start, cheat_path, final_approach
+
+    def positions_in_range(self, position, max_length):
+        for x in range(-max_length, max_length + 1):
+            for y in range(-max_length, max_length + 1):
+                if abs(x) + abs(y) <= max_length and (x, y) != (0, 0):
+                    yield position[0] + x, position[1] + y
+
+    def distance_between(self, cheat_start, cheat_end):
+        return abs(cheat_start[0] - cheat_end[0]) + abs(cheat_start[1] - cheat_end[1])
 
 
 def draw_cheat_path(racetrack, path_start, cheat_path, final_approach):
     for y, row in enumerate(racetrack.data):
         for x, cell in enumerate(row):
-            if (x, y) in path_start:
+            if (x, y) in cheat_path:
+                print('\033[91m' + cell + '\033[0m', end='')
+            elif (x, y) in path_start:
                 print('\033[92m' + cell + '\033[0m', end='')
             elif (x, y) in final_approach:
                 print('\033[94m' + cell + '\033[0m', end='')
-            elif (x, y) in cheat_path:
-                print('\033[91m' + cell + '\033[0m', end='')
             else:
                 print(cell, end='')
         print()
@@ -181,16 +167,16 @@ if __name__ == "__main__":
                     cheat_count += 1
                     saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
 
-                    print(f"\n\nSaved time: {saved_time}")
-                    draw_cheat_path(racetrack, path_start, cheat_path, final_approach)
+                    #print(f"\n\nSaved time: {saved_time}")
+                    #draw_cheat_path(racetrack, path_start, cheat_path, final_approach)
 
             print(f"Cheats worth at least {limit} picoseconds: {cheat_count}")
-            print("Saved time frequency:")
-            for saved_time, frequency in sorted(saved_time_frequency.items()):
-                print(f"{frequency} cheats saved {saved_time} picoseconds ")
+            # print("Saved time frequency:")
+            # for saved_time, frequency in sorted(saved_time_frequency.items()):
+            #     print(f"{frequency} cheats saved {saved_time} picoseconds ")
 
     # test value should be 285
         # too low 233268
         # too high 1061108
 
-        exit(0)
+        # exit(0)
