@@ -63,65 +63,65 @@ class Racetrack:
             for x, cell in enumerate(row):
                 yield x, y
 
-def find_shortest_paths(racetrack, start):
-    frontier = [(0, start)]
-    cost_so_far = {start: 0}
-    came_from = {}
+class CheatFinder:
+    def __init__(self, racetrack):
+        self.racetrack = racetrack
+        self.start = racetrack.find_start()
+        self.end = racetrack.find_end()
+        self.shortest_paths_from_start = self.find_shortest_paths(self.start)
+        self.shortest_paths_from_end = self.find_shortest_paths(self.end)
+        self.shortest_path_length = self.shortest_paths_from_start[self.end]
 
-    while frontier:
-        current_cost, current_position = heapq.heappop(frontier)
+    def find_shortest_paths(self, start):
+        frontier = [(0, start)]
+        cost_so_far = {start: 0}
+        came_from = {}
 
-        for neighbor, weight in racetrack.neighbors(current_position):
-            new_cost = current_cost + weight
-            if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
-                cost_so_far[neighbor] = new_cost
-                heapq.heappush(frontier, (new_cost, neighbor))
-                came_from[neighbor] = current_position
+        while frontier:
+            current_cost, current_position = heapq.heappop(frontier)
 
-    return cost_so_far
+            for neighbor, weight in self.racetrack.neighbors(current_position):
+                new_cost = current_cost + weight
+                if neighbor not in cost_so_far or new_cost < cost_so_far[neighbor]:
+                    cost_so_far[neighbor] = new_cost
+                    heapq.heappush(frontier, (new_cost, neighbor))
+                    came_from[neighbor] = current_position
 
-def find_cheat_candidates_from(racetrack, start, max_length):
-    frontier = [(1, wall_neighbor) for wall_neighbor in racetrack.wall_neighbors(start)]
-    visited = set(start)
+        return cost_so_far
 
-    while frontier:
-        current_length, current_position = frontier.pop(0)
+    def find_cheat_candidates_from(self, start, max_length):
+        frontier = [(1, wall_neighbor) for wall_neighbor in self.racetrack.wall_neighbors(start)]
+        visited = set(start)
 
-        if current_position in visited:
-            continue
+        while frontier:
+            current_length, current_position = frontier.pop(0)
 
-        visited.add(current_position)
+            if current_position in visited:
+                continue
 
-        if current_length > max_length:
-            continue
+            visited.add(current_position)
 
-        if racetrack.data[current_position[1]][current_position[0]] == WALL:
-            for neighbor, _ in racetrack.all_neighbors(current_position):
-                if neighbor not in visited:
-                    frontier.append((current_length + 1, neighbor))
-        else:
-            yield current_position, current_length
+            if current_length > max_length:
+                continue
 
-def find_cheat_candidates(racetrack, max_length):
-    for start_position in racetrack.valid_positions():
-        for end_position, cheat_distance in find_cheat_candidates_from(racetrack, start_position, max_length):
-            yield start_position, end_position, cheat_distance
+            if self.racetrack.data[current_position[1]][current_position[0]] == WALL:
+                for neighbor, _ in self.racetrack.all_neighbors(current_position):
+                    if neighbor not in visited:
+                        frontier.append((current_length + 1, neighbor))
+            else:
+                yield current_position, current_length
 
-def find_cheats(racetrack, max_length):
-    start = racetrack.find_start()
-    end = racetrack.find_end()
+    def find_cheat_candidates(self, max_length):
+        for start_position in self.racetrack.valid_positions():
+            for end_position, cheat_distance in self.find_cheat_candidates_from(start_position, max_length):
+                yield start_position, end_position, cheat_distance
 
-    shortest_paths_from_start = find_shortest_paths(racetrack, start)
-    shortest_paths_from_end = find_shortest_paths(racetrack, end)
-
-    shortest_path_length = shortest_paths_from_start[end]
-
-    for cheat_start_position, cheat_end_position, cheat_distance in find_cheat_candidates(racetrack, max_length):
-        cheat_length = shortest_paths_from_start[cheat_start_position] + shortest_paths_from_end[cheat_end_position] + cheat_distance
-        saved_time = shortest_path_length - cheat_length
-        if saved_time > 1:
-            yield saved_time
-
+    def find_cheats(self, max_length):
+        for cheat_start_position, cheat_end_position, cheat_distance in self.find_cheat_candidates(max_length):
+            cheat_length = self.shortest_paths_from_start[cheat_start_position] + self.shortest_paths_from_end[cheat_end_position] + cheat_distance
+            saved_time = self.shortest_path_length - cheat_length
+            if saved_time > 1:
+                yield saved_time
 
 if __name__ == "__main__":
     for file, meta in data_files_for(os.path.basename(__file__)):
@@ -129,6 +129,7 @@ if __name__ == "__main__":
         data = [list(line.strip()) for line in file]
 
         racetrack = Racetrack(data)
+        cheat_finder = CheatFinder(racetrack)
 
         parts = [
             ("--- Part one ---", 2),
@@ -140,7 +141,7 @@ if __name__ == "__main__":
 
             cheat_count = 0
             saved_time_frequency = {}
-            for saved_time in find_cheats(racetrack, max_length):
+            for saved_time in cheat_finder.find_cheats(max_length):
                 if saved_time >= limit:
                     cheat_count += 1
                     saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
