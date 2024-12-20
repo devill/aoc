@@ -82,17 +82,18 @@ def find_shortest_paths(racetrack, start):
 
 def find_cheat_candidates_from(racetrack, start, max_length):
     frontier = [(1, wall_neighbor) for wall_neighbor in racetrack.wall_neighbors(start)]
-    visited = set()
+    visited = set(start)
 
     while frontier:
         current_length, current_position = frontier.pop(0)
-        if current_length > max_length:
-            continue
 
         if current_position in visited:
             continue
 
         visited.add(current_position)
+
+        if current_length > max_length:
+            continue
 
         if racetrack.data[current_position[1]][current_position[0]] == WALL:
             for neighbor, _ in racetrack.all_neighbors(current_position):
