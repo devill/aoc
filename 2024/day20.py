@@ -160,7 +160,7 @@ def draw_cheat_path(racetrack, path_start, cheat_path, final_approach):
 
 if __name__ == "__main__":
     for file, meta in data_files_for(os.path.basename(__file__)):
-        limit = 100 if meta['type'] == 'real' else 76
+        limit = 100 if meta['type'] == 'real' else 50
         data = [list(line.strip()) for line in file]
 
         racetrack = Racetrack(data)
