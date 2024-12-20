@@ -129,36 +129,25 @@ if __name__ == "__main__":
 
         racetrack = Racetrack(data)
 
-        print("\n--- Part one ---")
+        parts = [
+            ("--- Part one ---", 2),
+            ("--- Part two ---", 20)
+        ]
 
-        cheat_count = 0
-        saved_time_frequency = {}
-        for saved_time in find_cheats(racetrack, 2):
-            if saved_time >= limit:
-                cheat_count += 1
-                saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
+        for part_title, max_length in parts:
+            print(part_title)
 
-        print(f"Cheats worth at least {limit} picoseconds: {cheat_count}")
-        print("Saved time frequency:")
-        for saved_time, frequency in sorted(saved_time_frequency.items()):
-            print(f"{frequency} cheats saved {saved_time} picoseconds ")
+            cheat_count = 0
+            saved_time_frequency = {}
+            for saved_time in find_cheats(racetrack, max_length):
+                if saved_time >= limit:
+                    cheat_count += 1
+                    saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
 
-        print("\n--- Part two ---")
-
-        cheat_count = 0
-        saved_time_frequency = {}
-        for saved_time in find_cheats(racetrack, 20):
-            if saved_time >= limit:
-                cheat_count += 1
-                saved_time_frequency[saved_time] = saved_time_frequency.get(saved_time, 0) + 1
-
-        print(f"Cheats worth at least {limit} picoseconds: {cheat_count}")
-        print("Saved time frequency:")
-        for saved_time, frequency in sorted(saved_time_frequency.items()):
-            print(f"{frequency} cheats saved {saved_time} picoseconds ")
-
-
-
+            print(f"Cheats worth at least {limit} picoseconds: {cheat_count}")
+            print("Saved time frequency:")
+            for saved_time, frequency in sorted(saved_time_frequency.items()):
+                print(f"{frequency} cheats saved {saved_time} picoseconds ")
 
     # test value should be 285
         # too low 233268
