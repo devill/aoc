@@ -43,8 +43,6 @@ class Keypad:
             for (start, end), paths in self.paths_for().items()
         }
 
-def add_indirection(path, min_path_length):
-    return sum(min_path_length[(start, end)] for start, end in zip('A' + path, path + 'A'))
 
 def generate_indirect_paths(indirections):
     numeric_keypad = Keypad([
