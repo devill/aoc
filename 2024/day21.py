@@ -44,47 +44,51 @@ class Keypad:
             for (start, end), paths in self.paths.items()
         }
 
+class ComplexityCalculator:
+    def __init__(self, indirections):
+        self.indirections = indirections
+        self.min_indirect_numeric_path_length = self._generate_indirect_paths()
 
-def generate_indirect_paths(indirections):
-    numeric_keypad = Keypad([
-        ['7', '8', '9'],
-        ['4', '5', '6'],
-        ['1', '2', '3'],
-        ['', '0', 'A']
-    ])
+    def _generate_indirect_paths(self):
+        numeric_keypad = Keypad([
+            ['7', '8', '9'],
+            ['4', '5', '6'],
+            ['1', '2', '3'],
+            ['', '0', 'A']
+        ])
 
-    directional_keypad = Keypad([
-        ['', '^', 'A'],
-        ['<', 'v', '>']
-    ])
-    min_path_length = directional_keypad.initial_min_path_length()
+        directional_keypad = Keypad([
+            ['', '^', 'A'],
+            ['<', 'v', '>']
+        ])
+        min_path_length = directional_keypad.initial_min_path_length()
 
-    for _ in range(indirections):
-        min_path_length = directional_keypad.add_indirections(min_path_length)
+        for _ in range(self.indirections):
+            min_path_length = directional_keypad.add_indirections(min_path_length)
 
-    min_indirect_numeric_path_length = numeric_keypad.add_indirections(min_path_length)
+        return numeric_keypad.add_indirections(min_path_length)
 
-    return min_indirect_numeric_path_length
+    def _find_min_length(self, numeric_sequence):
+        return sum([self.min_indirect_numeric_path_length[(start, end)] for start, end in zip('A' + numeric_sequence[:-1], numeric_sequence)])
 
-def find_min_length(numeric_sequence, min_indirect_numeric_path_length):
-    return sum([min_indirect_numeric_path_length[(start, end)] for start, end in zip('A' + numeric_sequence[:-1], numeric_sequence)])
+    def calculate_complexity(self, data):
+        calculated_values = [{
+            "min_length": self._find_min_length(numeric_sequence),
+            "value": int(''.join(numeric_sequence[:-1]))
+        } for numeric_sequence in data]
 
-def calculate_complexity(data, indirections):
-    min_indirect_numeric_path_length = generate_indirect_paths(indirections)
-    calculated_values = [{ "min_length": find_min_length(numeric_sequence, min_indirect_numeric_path_length), "value": int(''.join(numeric_sequence[:-1])) } for numeric_sequence in data]
-    complexity = sum([value["min_length"] * value["value"] for value in calculated_values])
-    return complexity
+        return sum([value["min_length"] * value["value"] for value in calculated_values])
 
 if __name__ == "__main__":
-
-
     for file, _ in data_files_for(os.path.basename(__file__)):
         data = [line.strip() for line in file.readlines()]
 
         print("\n--- Part one ---")
-        complexity = calculate_complexity(data, 2)
+        calculator = ComplexityCalculator(2)
+        complexity = calculator.calculate_complexity(data)
         print(f"Complexity: {complexity}")
 
         print("\n--- Part two ---")
-        complexity = calculate_complexity(data, 25)
+        calculator = ComplexityCalculator(25)
+        complexity = calculator.calculate_complexity(data)
         print(f"Complexity: {complexity}")
