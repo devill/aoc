@@ -71,13 +71,8 @@ class ComplexityCalculator:
     def _find_min_length(self, numeric_sequence):
         return sum([self.min_indirect_numeric_path_length[(start, end)] for start, end in zip('A' + numeric_sequence[:-1], numeric_sequence)])
 
-    def calculate_complexity(self, data):
-        calculated_values = [{
-            "min_length": self._find_min_length(numeric_sequence),
-            "value": int(''.join(numeric_sequence[:-1]))
-        } for numeric_sequence in data]
-
-        return sum([value["min_length"] * value["value"] for value in calculated_values])
+    def calculate_complexity(self, numeric_sequence):
+        return self._find_min_length(numeric_sequence) * int(''.join(numeric_sequence[:-1]))
 
 if __name__ == "__main__":
     for file, _ in data_files_for(os.path.basename(__file__)):
@@ -85,10 +80,14 @@ if __name__ == "__main__":
 
         print("\n--- Part one ---")
         calculator = ComplexityCalculator(2)
-        complexity = calculator.calculate_complexity(data)
-        print(f"Complexity: {complexity}")
+        complexities = [
+            calculator.calculate_complexity(numeric_sequence) for numeric_sequence in data
+        ]
+        print(f"Complexity: {sum(complexities)}")
 
         print("\n--- Part two ---")
         calculator = ComplexityCalculator(25)
-        complexity = calculator.calculate_complexity(data)
-        print(f"Complexity: {complexity}")
+        complexities = [
+            calculator.calculate_complexity(numeric_sequence) for numeric_sequence in data
+        ]
+        print(f"Complexity: {sum(complexities)}")
