@@ -38,12 +38,9 @@ def calculate_complexity(data, indirections, numeric_keypad, directional_keypad)
     directional_keypad_paths = directional_keypad.paths_for()
     numeric_keypad_paths = numeric_keypad.paths_for()
 
-    min_path_length = {
-        (start, end): min(len(path) for path in paths) + 1
-        for (start, end), paths in directional_keypad_paths.items()
-    }
+    min_path_length = { (start, end): 1 for (start, end) in directional_keypad_paths.keys() }
 
-    for _ in range(indirections - 1):
+    for _ in range(indirections):
         min_indirect_path_length = {
             (start, end): min([add_indirection(path, min_path_length) for path in paths])
             for (start, end), paths in directional_keypad_paths.items()
