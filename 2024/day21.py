@@ -1,6 +1,5 @@
 import os
 from utils import data_files_for
-from collections import deque
 
 # Define the keypads
 numeric_keypad = [
