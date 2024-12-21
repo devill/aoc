@@ -5,8 +5,9 @@ class Keypad:
     def __init__(self, layout):
         self.layout = layout
         self.positions = {key: (x, y) for y, row in enumerate(layout) for x, key in enumerate(row) if key}
+        self.paths = self._calculate_paths()
 
-    def shortest_paths_between_keys(self, start_key, end_key):
+    def _shortest_paths_between_keys(self, start_key, end_key):
         start = self.positions[start_key]
         end = self.positions[end_key]
 
@@ -25,22 +26,22 @@ class Keypad:
         if self.layout[start[1]][end[0]] != '':
             yield ''.join([horizontal_direction] * horizontal_distance + [vertical_direction] * vertical_distance)
 
-    def paths_for(self):
+    def _calculate_paths(self):
         return {
-            (start, end): [path for path in self.shortest_paths_between_keys(start, end)]
+            (start, end): [path for path in self._shortest_paths_between_keys(start, end)]
             for start in self.positions for end in self.positions
         }
 
     def initial_min_path_length(self):
-        return { (start, end): 1 for start, end in self.paths_for().keys() }
+        return {(start, end): 1 for start, end in self.paths.keys()}
 
-    def add_indirection(self, path, min_path_length):
+    def _add_indirection(self, path, min_path_length):
         return sum(min_path_length[(start, end)] for start, end in zip('A' + path, path + 'A'))
 
     def add_indirections(self, min_path_length):
         return {
-            (start, end): min([self.add_indirection(path, min_path_length) for path in paths])
-            for (start, end), paths in self.paths_for().items()
+            (start, end): min([self._add_indirection(path, min_path_length) for path in paths])
+            for (start, end), paths in self.paths.items()
         }
 
 
