@@ -66,7 +66,7 @@ class Graph:
         if empty(candidates) and empty(not_connected_to_clique):
             yield clique
         else:
-            for next_candidate in self.best_candidates(candidates, not_connected_to_clique):
+            for next_candidate in self.reduced_candidate_list(candidates, not_connected_to_clique):
                 yield from self._expand_clique(
                     clique.union({next_candidate}),
                     candidates.intersection(self.neighbors(next_candidate)),
@@ -75,7 +75,7 @@ class Graph:
                 candidates.remove(next_candidate)
                 not_connected_to_clique.add(next_candidate)
 
-    def best_candidates(self, candidates, not_connected_to_clique):
+    def reduced_candidate_list(self, candidates, not_connected_to_clique):
         pivot = get_arbitrary_element(candidates.union(not_connected_to_clique))
         pivot_neighbors = self.neighbors(pivot)
         return candidates - pivot_neighbors
