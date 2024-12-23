@@ -31,6 +31,19 @@ class Graph:
     def neighbors(self, node):
         return self.edges[node]
 
+    def find_three_cliques_with_matching_nodes(self, regex):
+        t_nodes = self.search_nodes(regex)
+
+        three_sets = set()
+        for node, edges in t_nodes:
+            # For each pair of neighbours
+            for a, b in product(edges, repeat=2):
+                if not self.is_connected(a, b):
+                    continue
+                items = sorted([node, a, b])
+                three_sets.add(tuple(items))
+        return three_sets
+
     def find_all_cliques(self):
         for clique in self.find_all_cliques_recursion(set(), self.node_set(), set()):
             yield sorted(clique)
@@ -78,18 +91,8 @@ if __name__ == "__main__":
 
         # Nodes starting with 't'
         t_matcher = re.compile(r"^t")
-        t_nodes = graph.search_nodes(t_matcher)
+        three_sets = graph.find_three_cliques_with_matching_nodes(t_matcher)
 
-        three_sets = set()
-        for node, edges in t_nodes:
-            # For each pair of neighbours
-            for a, b in product(edges, repeat=2):
-                if a == b:
-                    continue
-                if not graph.is_connected(a, b):
-                    continue
-                items = sorted([node, a, b])
-                three_sets.add(tuple(items))
 
         print("Number of triangles:", len(three_sets))
 
