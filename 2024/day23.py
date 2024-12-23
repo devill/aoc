@@ -11,6 +11,10 @@ class Graph:
         self.add_directed_edge(a, b)
         self.add_directed_edge(b, a)
 
+    def add_edges(self, edges):
+        for a, b in edges:
+            self.add_edge(a, b)
+
     def add_directed_edge(self, a, b):
         if a not in self.edges:
             self.edges[a] = set()
@@ -81,8 +85,7 @@ if __name__ == "__main__":
         edges = [parse_edge(line) for line in file]
 
         graph = Graph()
-        for edge in edges:
-            graph.add_edge(*edge)
+        graph.add_edges(edges)
 
         print("Number of nodes:", len(graph.edges))
         print("Number of edges:", sum(len(edges) for edges in graph.edges.values()) //2)
