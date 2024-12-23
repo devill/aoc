@@ -89,11 +89,7 @@ if __name__ == "__main__":
 
         print("\n--- Part one ---")
 
-        # Nodes starting with 't'
-        t_matcher = re.compile(r"^t")
-        three_sets = graph.find_three_cliques_with_matching_nodes(t_matcher)
-
-
+        three_sets = graph.find_three_cliques_with_matching_nodes(re.compile(r"^t"))
         print("Number of triangles:", len(three_sets))
 
 
