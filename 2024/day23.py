@@ -2,33 +2,6 @@ import os
 import re
 from itertools import product
 from utils import data_files_for
-import networkx as nx
-
-def bron_kerbosch_with_pivoting(graph, r, p, x):
-    """Bron–Kerbosch algorithm with pivoting for finding cliques."""
-    if not p and not x:
-        yield r
-    else:
-        # Choose a pivot to minimize the size of P ∩ N(pivot)
-        pivot = next(iter(p.union(x)))
-        pivot_neighbors = set(graph.neighbors(pivot))  # Convert neighbors to a set
-        for v in p - pivot_neighbors:
-            yield from bron_kerbosch_with_pivoting(
-                graph,
-                r.union({v}),
-                p.intersection(graph.neighbors(v)),
-                x.intersection(graph.neighbors(v))
-            )
-            p.remove(v)
-            x.add(v)
-
-def find_largest_clique(graph):
-    """Find the largest clique in the graph using Bron-Kerbosch with pivoting."""
-    max_clique = set()
-    for clique in bron_kerbosch_with_pivoting(graph, set(), set(graph.nodes()), set()):
-        if len(clique) > len(max_clique):
-            max_clique = clique
-    return max_clique
 
 class Graph:
     def __init__(self):
@@ -46,19 +19,46 @@ class Graph:
     def nodes(self):
         return self.edges.items()
 
+    def node_set(self):
+        return set(self.edges.keys())
+
     def is_connected(self, a, b):
         return b in self.edges[a]
 
     def search_nodes(self, regex):
         return [(node, edges) for node, edges in self.nodes() if regex.match(node)]
 
-    def get_networkx_graph(self):
-        G = nx.Graph()
-        for node, edges in self.nodes():
-            for edge in edges:
-                G.add_edge(node, edge)
-        return G
+    def neighbors(self, node):
+        return self.edges[node]
 
+    def find_all_cliques(self):
+        for clique in self.find_all_cliques_recursion(set(), self.node_set(), set()):
+            yield sorted(clique)
+
+    def find_all_cliques_recursion(self, r, p, x):
+        """Bron–Kerbosch algorithm with pivoting for finding cliques."""
+        if not p and not x:
+            yield r
+        else:
+            # Choose a pivot to minimize the size of P ∩ N(pivot)
+            pivot = next(iter(p.union(x)))
+            pivot_neighbors = self.neighbors(pivot)
+            for v in p - pivot_neighbors:
+                yield from self.find_all_cliques_recursion(
+                    r.union({v}),
+                    p.intersection(self.neighbors(v)),
+                    x.intersection(self.neighbors(v))
+                )
+                p.remove(v)
+                x.add(v)
+
+    def find_largest_clique(self):
+        """Find the largest clique in the graph using Bron-Kerbosch with pivoting."""
+        max_clique = set()
+        for clique in self.find_all_cliques():
+            if len(clique) > len(max_clique):
+                max_clique = clique
+        return max_clique
 
 def parse_edge(line):
     return tuple(line.strip().split("-"))
@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
         print("\n--- Part two ---")
 
-        G = graph.get_networkx_graph()
-        largest_clique = sorted(find_largest_clique(G))
+
+        largest_clique = graph.find_largest_clique()
         print("Largest Clique:", ','.join(largest_clique))
         print("Size of Largest Clique:", len(largest_clique))
