@@ -3,6 +3,11 @@ import re
 from itertools import product
 from utils import data_files_for
 
+
+def empty(clique):
+    return not clique
+
+
 class Graph:
     def __init__(self):
         self.edges = {}
@@ -52,33 +57,30 @@ class Graph:
         for clique in self.find_all_cliques_recursion(set(), self.node_set(), set()):
             yield sorted(clique)
 
-    def find_all_cliques_recursion(self, r, p, x):
+    def find_all_cliques_recursion(self, current_clique, clicque_candidates, not_connected_to_clique):
         """Bron–Kerbosch algorithm with pivoting for finding cliques."""
-        if not p and not x:
-            yield r
+        if empty(clicque_candidates) and empty(not_connected_to_clique):
+            yield current_clique
         else:
             # Choose a pivot to minimize the size of P ∩ N(pivot)
-            pivot = next(iter(p.union(x)))
+            pivot = next(iter(clicque_candidates.union(not_connected_to_clique)))
             pivot_neighbors = self.neighbors(pivot)
-            for v in p - pivot_neighbors:
+            for v in clicque_candidates - pivot_neighbors:
                 yield from self.find_all_cliques_recursion(
-                    r.union({v}),
-                    p.intersection(self.neighbors(v)),
-                    x.intersection(self.neighbors(v))
+                    current_clique.union({v}),
+                    clicque_candidates.intersection(self.neighbors(v)),
+                    not_connected_to_clique.intersection(self.neighbors(v))
                 )
-                p.remove(v)
-                x.add(v)
+                clicque_candidates.remove(v)
+                not_connected_to_clique.add(v)
 
     def find_largest_clique(self):
-        """Find the largest clique in the graph using Bron-Kerbosch with pivoting."""
-        max_clique = set()
-        for clique in self.find_all_cliques():
-            if len(clique) > len(max_clique):
-                max_clique = clique
-        return max_clique
+        return max(self.find_all_cliques(), key=len, default=set())
+
 
 def parse_edge(line):
     return tuple(line.strip().split("-"))
+
 
 if __name__ == "__main__":
     for file, _ in data_files_for(os.path.basename(__file__)):
@@ -91,14 +93,10 @@ if __name__ == "__main__":
         print("Number of edges:", sum(len(edges) for edges in graph.edges.values()) //2)
 
         print("\n--- Part one ---")
-
         three_sets = graph.find_three_cliques_with_matching_nodes(re.compile(r"^t"))
         print("Number of triangles:", len(three_sets))
 
-
         print("\n--- Part two ---")
-
-
         largest_clique = graph.find_largest_clique()
         print("Largest Clique:", ','.join(largest_clique))
         print("Size of Largest Clique:", len(largest_clique))
