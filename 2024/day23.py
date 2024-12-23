@@ -8,6 +8,10 @@ def empty(clique):
     return not clique
 
 
+def get_arbitrary_element(s):
+    return next(iter(s))
+
+
 class Graph:
     def __init__(self):
         self.edges = {}
@@ -54,25 +58,27 @@ class Graph:
         return three_sets
 
     def find_all_cliques(self):
-        for clique in self.find_all_cliques_recursion(set(), self.node_set(), set()):
+        for clique in self._expand_clique(set(), self.node_set(), set()):
             yield sorted(clique)
 
-    def find_all_cliques_recursion(self, current_clique, clicque_candidates, not_connected_to_clique):
+    def _expand_clique(self, clique, candidates, not_connected_to_clique):
         """Bron–Kerbosch algorithm with pivoting for finding cliques."""
-        if empty(clicque_candidates) and empty(not_connected_to_clique):
-            yield current_clique
+        if empty(candidates) and empty(not_connected_to_clique):
+            yield clique
         else:
-            # Choose a pivot to minimize the size of P ∩ N(pivot)
-            pivot = next(iter(clicque_candidates.union(not_connected_to_clique)))
-            pivot_neighbors = self.neighbors(pivot)
-            for v in clicque_candidates - pivot_neighbors:
-                yield from self.find_all_cliques_recursion(
-                    current_clique.union({v}),
-                    clicque_candidates.intersection(self.neighbors(v)),
-                    not_connected_to_clique.intersection(self.neighbors(v))
+            for next_candidate in self.best_candidates(candidates, not_connected_to_clique):
+                yield from self._expand_clique(
+                    clique.union({next_candidate}),
+                    candidates.intersection(self.neighbors(next_candidate)),
+                    not_connected_to_clique.intersection(self.neighbors(next_candidate))
                 )
-                clicque_candidates.remove(v)
-                not_connected_to_clique.add(v)
+                candidates.remove(next_candidate)
+                not_connected_to_clique.add(next_candidate)
+
+    def best_candidates(self, candidates, not_connected_to_clique):
+        pivot = get_arbitrary_element(candidates.union(not_connected_to_clique))
+        pivot_neighbors = self.neighbors(pivot)
+        return candidates - pivot_neighbors
 
     def find_largest_clique(self):
         return max(self.find_all_cliques(), key=len, default=set())
