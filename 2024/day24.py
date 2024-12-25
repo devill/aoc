@@ -1,6 +1,5 @@
 import os
 from utils import data_files_for
-import re
 
 class CircuitBuilder:
     def __init__(self):
@@ -59,6 +58,14 @@ class Circuit:
 
     def wires_names(self):
         return self.wires.keys()
+
+    def expected_aliases(self):
+        for i in range(2,self.input_length):
+            yield f"and_{i:02}"
+            yield f"xor_{i:02}"
+            yield f"carry_{i:02}"
+            yield f"carryand_{i:02}"
+            yield f"bit_{i:02}"
 
     def get_outputs(self, name):
         if name in self.alias_to_name:
@@ -217,7 +224,7 @@ if __name__ == "__main__":
 
             # Take the other child of carry
             carry_and = [child for child in carry_outputs if child != f"z{i:02}"][0]
-            circuit.set_alias(carry_and, f"carry_and_{i:02}")
+            circuit.set_alias(carry_and, f"carryand_{i:02}")
             carry_and_inputs = circuit.get_inputs(carry_and)
 
             carry_and_outputs = circuit.get_outputs(carry_and)
@@ -227,6 +234,9 @@ if __name__ == "__main__":
             current_carry = carry_and_outputs[0]
             circuit.set_alias(current_carry, f"carry_{i:02}")
 
+        for i in range(circuit.input_length):
+            circuit.set_alias(f"x{i:02}", f"xin_{i:02}")
+            circuit.set_alias(f"y{i:02}", f"yin_{i:02}")
 
         print(" ")
         current_carry = and_operators[0]
@@ -271,4 +281,54 @@ if __name__ == "__main__":
                 print(f"z{i:02} should have XOR operator")
                 print(f"Instead it is {circuit.display_name(left)} {operator} {circuit.display_name(right)}")
 
-    # shw, z18, bmn, z23
+        print("")
+        for alias in circuit.expected_aliases():
+            if alias not in circuit.alias_to_name:
+                print(f"Missing alias: {alias}")
+
+            inputs = circuit.get_inputs(circuit.alias_to_name[alias])
+            type, id = alias.split("_")
+            input_alises = sorted([circuit.name_to_alias[input] for input in inputs])
+            if type == "and":
+                if input_alises != [f"xin_{id}", f"yin_{id}"]:
+                    print(f"{alias}: {circuit.display_name(inputs[0])} {circuit.display_name(inputs[1])} (expected: {f'xin_{id} yin_{id}'})")
+            elif type == "xor":
+                if input_alises != [f"xin_{id}", f"yin_{id}"]:
+                    print(f"{alias}: {circuit.display_name(inputs[0])} {circuit.display_name(inputs[1])} (expected: {f'xin_{id} yin_{id}'})")
+            elif type == "carryand":
+                if input_alises != [f"carry_{(int(id)-1):02}", f"xor_{id}"]:
+                    print(f"{alias}: {circuit.display_name(inputs[0])} {circuit.display_name(inputs[1])} (expected: {f'xor_{id} carry_{(int(id)-1):02}'})")
+            elif type == "carry":
+                if input_alises != [f"and_{id}", f"carryand_{id}"]:
+                    print(f"{alias}: {circuit.display_name(inputs[0])} {circuit.display_name(inputs[1])} (expected: {f'and_{id} carryand_{id}'})")
+            elif type == "bit":
+                if input_alises != [f"carry_{(int(id)-1):02}", f"xor_{id}"]:
+                    print(f"{alias}: {circuit.display_name(inputs[0])} {circuit.display_name(inputs[1])} (expected: {f'xor_{id} carry_{(int(id)-1):02}'})")
+            else:
+                print(f"{alias}: {circuit.display_name(inputs[0])} {circuit.display_name(inputs[1])} (expected: {f'xin_{id} yin_{id}'}")
+
+        print("")
+        for alias in circuit.expected_aliases():
+            if alias not in circuit.alias_to_name:
+                print(f"Missing alias: {alias}")
+
+            display_name = circuit.display_name(circuit.alias_to_name[alias])
+            outputs = circuit.get_outputs(circuit.alias_to_name[alias])
+            output_display_names = [circuit.display_name(output) for output in outputs]
+            type, id = alias.split("_")
+            output_alises = sorted([circuit.name_to_alias[output] for output in outputs])
+            if type == "and":
+                if output_alises != [f"carry_{id}"]:
+                    print(f"{display_name}: {output_display_names} (expected: {f'carry_{id}'})")
+            elif type == "xor":
+                if output_alises != [f"bit_{id}",f"carryand_{id}"]:
+                    print(f"{display_name}: {output_display_names} (expected: {f'bit_{id} carryand_{id}'})")
+            elif type == "carryand":
+                if output_alises != [f"carry_{id}"]:
+                    print(f"{display_name}: {output_display_names} (expected: {f'carry_{id}'})")
+            elif type == "carry":
+                if output_alises != [f"bit_{(int(id)+1):02}", f"carryand_{(int(id)+1):02}"]:
+                    print(f"{display_name}: {output_display_names} (expected: {f'bit_{(int(i)+1):02} carryand_{(int(i)+1):02}'})")
+
+
+    print(','.join(sorted(['mvb', 'z08', 'z23', 'bmn', 'z18', 'wss', 'rds', 'jss'])))
